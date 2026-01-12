@@ -603,7 +603,7 @@ const RegisteredUsers = () => {
                           className="group hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-white transition-all duration-150"
                         >
                           {/* User Details Column */}
-                          <td className="px-6 py-4">
+                          {/* <td className="px-6 py-4">
                             <div className="space-y-3">
                               <div className="flex items-center gap-3">
                                 <div>
@@ -618,6 +618,63 @@ const RegisteredUsers = () => {
                                     </span>
                                     <FiCopy className="w-3 h-3 text-gray-400 group-hover/btn:text-blue-500 opacity-0 group-hover/btn:opacity-100 transition-all" />
                                   </button>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <div className="relative">
+                                      <input
+                                        type={
+                                          showPassword[user._id]
+                                            ? "text"
+                                            : "password"
+                                        }
+                                        value={user.password}
+                                        readOnly
+                                        className="font-mono text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 pr-8 w-32"
+                                      />
+                                      <button
+                                        onClick={() =>
+                                          togglePasswordVisibility(user._id)
+                                        }
+                                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600"
+                                      >
+                                        {showPassword[user._id] ? (
+                                          <FiEyeOff className="w-3 h-3" />
+                                        ) : (
+                                          <FiEye className="w-3 h-3" />
+                                        )}
+                                      </button>
+                                    </div>
+                                    <span
+                                      className={`text-xs px-2 py-1 rounded-full ${
+                                        user.isActive
+                                          ? "bg-emerald-100 text-emerald-700"
+                                          : "bg-rose-100 text-rose-700"
+                                      }`}
+                                    >
+                                      {user.isActive ? "Active" : "Inactive"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td> */}
+                          <td className="px-6 py-4">
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-3">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono text-sm font-bold text-gray-900">
+                                      {user.userId}
+                                    </span>
+                                    <button
+                                      onClick={() =>
+                                        copyToClipboard(user.userId, "User ID")
+                                      }
+                                      className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                      title="Copy User ID"
+                                    >
+                                      <FiCopy className="w-3.5 h-3.5 text-gray-500 hover:text-blue-600" />
+                                    </button>
+                                  </div>
                                   <div className="flex items-center gap-2 mt-1">
                                     <div className="relative">
                                       <input
