@@ -4,6 +4,8 @@ import Dashboard from "../pages/dashboard/Dashboard";
 import ProtectedRoute from "../components/common/protectedRoute";
 import BusinessCategory from "../pages/category/BusinessCategory";
 import RegisteredUsers from "../pages/registeredUsers/registeredusers";
+import MembershipTypes from "../pages/membership-details/MembershipTypes";
+import EditMembershipTypes from "../pages/membership-details/EditMembershipTypes";
 
 const AppRoutes = () => {
   return (
@@ -32,6 +34,22 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <RegisteredUsers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/membership-types"
+          element={
+            <ProtectedRoute>
+              <MembershipTypes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/edit-membership/:id"
+          element={
+            <ProtectedRoute>
+              <EditMembershipTypes />
             </ProtectedRoute>
           }
         />
