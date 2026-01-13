@@ -39,6 +39,9 @@ const RegisteredUsers = () => {
   const [selectedReferrer, setSelectedReferrer] = useState(null);
   const [showReferrerModal, setShowReferrerModal] = useState(false);
 
+  console.log("users", users);
+  console.log("selectedReferrer",selectedReferrer)
+
   /* =========================
      FETCH USERS
   ========================= */
@@ -592,7 +595,7 @@ const RegisteredUsers = () => {
                   <tbody className="divide-y divide-gray-100">
                     {users.map((user) => {
                       const statusConfig = getStatusConfig(
-                        user.membershipStatus
+                        user.membership.status
                       );
                       const hasReferrer = user.referral?.referredByUser;
                       const isAdminReferral = user.referral?.source === "ADMIN";
@@ -983,7 +986,7 @@ const RegisteredUsers = () => {
                                 >
                                   {statusConfig.icon}
                                   <span className="font-semibold text-sm">
-                                    {user.membershipStatus}
+                                    {user.membership.status}
                                   </span>
                                 </div>
                               </div>
