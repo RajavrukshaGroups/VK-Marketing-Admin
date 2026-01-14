@@ -21,13 +21,15 @@ const Sidebar = ({ isOpen }) => {
   const navItems = [
     { to: "/admin/dashboard", icon: FiHome, label: "Dashboard" },
     { to: "/admin/category", icon: FiGrid, label: "Business Category" },
-    { to: "/admin/users", icon: FiUsers, label: "Users" },
-    { to: "/admin/payments", icon: FiCreditCard, label: "Payments" },
     {
       to: "/admin/membership-types",
       icon: FiAward,
-      label: "Membership Details",
+      label: "Membership Plans",
     },
+    { to: "/admin/users", icon: FiUsers, label: "Users" },
+
+    { to: "/admin/view-payments", icon: FiCreditCard, label: "Payments" },
+
     { to: "/admin/settings", icon: FiSettings, label: "Settings" },
   ];
 
