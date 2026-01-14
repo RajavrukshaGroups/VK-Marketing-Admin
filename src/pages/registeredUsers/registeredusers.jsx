@@ -22,10 +22,19 @@ import {
   FiUser,
   FiLink,
   FiShare2,
+  FiDollarSign,
+  FiCreditCard,
+  FiCalendar,
+  FiHome,
+  FiFileText,
+  FiEdit,
+  FiSave,
 } from "react-icons/fi";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/axios";
 import AdminLayout from "../../components/layout/AdminLayout";
+import UserDetailsModal from "./userDetailsModal";
+import EditMemberForm from "./editMemberForm";
 
 const RegisteredUsers = () => {
   const [users, setUsers] = useState([]);
@@ -39,8 +48,17 @@ const RegisteredUsers = () => {
   const [selectedReferrer, setSelectedReferrer] = useState(null);
   const [showReferrerModal, setShowReferrerModal] = useState(false);
 
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [userDetails, setUserDetails] = useState(null);
+  const [loadingUserDetails, setLoadingUserDetails] = useState(false);
+
+  const [editingUser, setEditingUser] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   console.log("users", users);
-  console.log("selectedReferrer",selectedReferrer)
+  console.log("selectedReferrer", selectedReferrer);
 
   /* =========================
      FETCH USERS
@@ -68,6 +86,28 @@ const RegisteredUsers = () => {
     }
   };
 
+  const fetchUserDetails = async (userId) => {
+    try {
+      setLoadingUserDetails(true);
+      const res = await api.get(`/users/user/${userId}`);
+      console.log("response", res);
+
+      if (res.data.success) {
+        setUserDetails(res.data.data);
+        setShowUserModal(true);
+      } else {
+        toast.error("Failed to fetch user details");
+      }
+    } catch (err) {
+      console.error("Error fetching user details:", err);
+      toast.error(
+        err?.response?.data?.message || "Failed to fetch user details"
+      );
+    } finally {
+      setLoadingUserDetails(false);
+    }
+  };
+
   useEffect(() => {
     fetchUsers(page, search);
   }, [page, search]);
@@ -75,6 +115,45 @@ const RegisteredUsers = () => {
   const handleSearch = (e) => {
     setPage(1);
     setSearch(e.target.value);
+  };
+
+  const handleViewUser = (user) => {
+    setSelectedUser(user);
+    fetchUserDetails(user._id);
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setShowEditModal(true);
+  };
+
+  // Function to handle form submission
+  const handleUpdateUser = async (updatedData) => {
+    try {
+      setIsSubmitting(true);
+      const res = await api.patch(
+        `/users/edit-user/${editingUser._id}`,
+        updatedData
+      );
+
+      if (res.data.success) {
+        toast.success("Member details updated successfully");
+        setShowEditModal(false);
+        setEditingUser(null);
+
+        // Refresh the user list
+        fetchUsers(page, search);
+      } else {
+        toast.error(res.data.message || "Failed to update member");
+      }
+    } catch (err) {
+      console.error("Update error:", err);
+      toast.error(
+        err?.response?.data?.message || "Failed to update member details"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const togglePasswordVisibility = (userId) => {
@@ -437,6 +516,33 @@ const RegisteredUsers = () => {
           </div>
         )}
 
+        {/* User Details Modal */}
+        {showUserModal && userDetails && (
+          <UserDetailsModal
+            userDetails={userDetails}
+            onClose={() => {
+              setShowUserModal(false);
+              setUserDetails(null);
+            }}
+            onCopyToClipboard={copyToClipboard}
+            loading={loadingUserDetails}
+            getStatusConfig={getStatusConfig}
+          />
+        )}
+
+        {/* Edit Member Modal */}
+        {showEditModal && editingUser && (
+          <EditMemberForm
+            user={editingUser}
+            onClose={() => {
+              setShowEditModal(false);
+              setEditingUser(null);
+            }}
+            onSubmit={handleUpdateUser}
+            isSubmitting={isSubmitting}
+          />
+        )}
+
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
@@ -589,6 +695,9 @@ const RegisteredUsers = () => {
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">
                         Status
                       </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
 
@@ -605,61 +714,6 @@ const RegisteredUsers = () => {
                           key={user._id}
                           className="group hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-white transition-all duration-150"
                         >
-                          {/* User Details Column */}
-                          {/* <td className="px-6 py-4">
-                            <div className="space-y-3">
-                              <div className="flex items-center gap-3">
-                                <div>
-                                  <button
-                                    onClick={() =>
-                                      copyToClipboard(user.userId, "User ID")
-                                    }
-                                    className="group/btn flex items-center gap-2 text-left"
-                                  >
-                                    <span className="font-mono text-sm font-bold text-gray-900 group-hover/btn:text-blue-600 transition-colors">
-                                      {user.userId}
-                                    </span>
-                                    <FiCopy className="w-3 h-3 text-gray-400 group-hover/btn:text-blue-500 opacity-0 group-hover/btn:opacity-100 transition-all" />
-                                  </button>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <div className="relative">
-                                      <input
-                                        type={
-                                          showPassword[user._id]
-                                            ? "text"
-                                            : "password"
-                                        }
-                                        value={user.password}
-                                        readOnly
-                                        className="font-mono text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 pr-8 w-32"
-                                      />
-                                      <button
-                                        onClick={() =>
-                                          togglePasswordVisibility(user._id)
-                                        }
-                                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600"
-                                      >
-                                        {showPassword[user._id] ? (
-                                          <FiEyeOff className="w-3 h-3" />
-                                        ) : (
-                                          <FiEye className="w-3 h-3" />
-                                        )}
-                                      </button>
-                                    </div>
-                                    <span
-                                      className={`text-xs px-2 py-1 rounded-full ${
-                                        user.isActive
-                                          ? "bg-emerald-100 text-emerald-700"
-                                          : "bg-rose-100 text-rose-700"
-                                      }`}
-                                    >
-                                      {user.isActive ? "Active" : "Inactive"}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </td> */}
                           <td className="px-6 py-4">
                             <div className="space-y-3">
                               <div className="flex items-center gap-3">
@@ -976,20 +1030,62 @@ const RegisteredUsers = () => {
 
                           {/* Status Column */}
                           <td className="px-6 py-4">
-                            <div className="flex flex-col gap-3">
+                            <div className="space-y-4">
                               <div>
                                 <div className="text-xs text-gray-500 mb-2">
-                                  Membership Status
+                                  Plan Status
                                 </div>
-                                <div
-                                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`}
-                                >
-                                  {statusConfig.icon}
-                                  <span className="font-semibold text-sm">
-                                    {user.membership.status}
-                                  </span>
+                                <div className="space-y-3">
+                                  <div
+                                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`}
+                                  >
+                                    {statusConfig.icon}
+                                    <span className="font-semibold text-sm">
+                                      {user.membership.status}
+                                    </span>
+                                  </div>
+                                  <div
+                                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`}
+                                  >
+                                    <span className="font-semibold text-sm">
+                                      {user.membership?.plan?.name || "No Plan"}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
+                            </div>
+                          </td>
+
+                          {/* View Button Column */}
+                          {/* <td className="px-6 py-4">
+                            <div className="flex justify-center">
+                              <button
+                                onClick={() => handleViewUser(user)}
+                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-lg hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 border border-blue-600 hover:border-blue-700"
+                              >
+                                <FiEye className="w-4 h-4" />
+                                View
+                              </button>
+                            </div>
+                          </td> */}
+
+                          {/* Actions Column */}
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2 justify-center">
+                              <button
+                                onClick={() => handleViewUser(user)}
+                                className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-lg hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 border border-blue-600 hover:border-blue-700"
+                                title="View Details"
+                              >
+                                <FiEye className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleEditUser(user)}
+                                className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium rounded-lg hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 border border-emerald-600 hover:border-emerald-700"
+                                title="Edit Member"
+                              >
+                                <FiEdit className="w-3.5 h-3.5" />
+                              </button>
                             </div>
                           </td>
                         </tr>

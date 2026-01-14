@@ -6,6 +6,7 @@ import BusinessCategory from "../pages/category/BusinessCategory";
 import RegisteredUsers from "../pages/registeredUsers/registeredusers";
 import MembershipTypes from "../pages/membership-details/MembershipTypes";
 import EditMembershipTypes from "../pages/membership-details/EditMembershipTypes";
+import ListAllPayments from "../pages/payments/listAllPayments";
 
 const AppRoutes = () => {
   return (
@@ -50,6 +51,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <EditMembershipTypes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/view-payments"
+          element={
+            <ProtectedRoute>
+              <ListAllPayments />
             </ProtectedRoute>
           }
         />
