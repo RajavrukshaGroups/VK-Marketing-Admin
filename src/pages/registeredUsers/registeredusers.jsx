@@ -35,6 +35,7 @@ import api from "../../api/axios";
 import AdminLayout from "../../components/layout/AdminLayout";
 import UserDetailsModal from "./userDetailsModal";
 import EditMemberForm from "./editMemberForm";
+import UserFilters from "./userFilter"; // Import the filters component
 
 const RegisteredUsers = () => {
   const [users, setUsers] = useState([]);
@@ -42,36 +43,88 @@ const RegisteredUsers = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
+
+  // Add filters state
+  const [filters, setFilters] = useState({
+    businessCategory: "",
+    businessType: "",
+    state: "",
+    district: "",
+    taluk: "",
+    membershipPlan: "",
+  });
   const [showPassword, setShowPassword] = useState({});
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [selectedReferrer, setSelectedReferrer] = useState(null);
   const [showReferrerModal, setShowReferrerModal] = useState(false);
-
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
   const [userDetails, setUserDetails] = useState(null);
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
-
   const [editingUser, setEditingUser] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  console.log("users", users);
-  console.log("selectedReferrer", selectedReferrer);
+  const [appliedFilters, setAppliedFilters] = useState({});
 
   /* =========================
-     FETCH USERS
+     FETCH USERS WITH FILTERS
   ========================= */
-  const fetchUsers = async (pageNo = 1, searchText = "") => {
+  // const fetchUsers = async (pageNo = 1, searchText = "", filterParams = {}) => {
+  //   try {
+  //     setLoading(true);
+  //     const params = {
+  //       page: pageNo,
+  //       search: searchText,
+  //       ...filterParams,
+  //     };
+
+  //     // Remove empty filter values
+  //     Object.keys(params).forEach(
+  //       (key) => params[key] === "" && delete params[key]
+  //     );
+
+  //     const res = await api.get("/users/fetch-user-details", { params });
+
+  //     if (res.data.success) {
+  //       setUsers(res.data.data);
+  //       setTotalPages(res.data.pagination?.totalPages || 1);
+  //     } else {
+  //       toast.error("Failed to fetch users");
+  //     }
+  //   } catch (err) {
+  //     toast.error(err?.response?.data?.message || "Error fetching users");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const fetchUsers = async (
+    pageNo = 1,
+    searchText = "",
+    appliedFilterParams = {}
+  ) => {
     try {
       setLoading(true);
-      const res = await api.get("/users/fetch-user-details", {
-        params: {
-          page: pageNo,
-          search: searchText,
-        },
+
+      const params = {
+        page: pageNo,
+        search: searchText,
+        ...appliedFilterParams,
+      };
+
+      // ❗ Remove empty arrays & empty strings
+      Object.keys(params).forEach((key) => {
+        if (
+          params[key] === "" ||
+          (Array.isArray(params[key]) && params[key].length === 0)
+        ) {
+          delete params[key];
+        }
       });
+
+      const res = await api.get("/users/fetch-user-details", { params });
 
       if (res.data.success) {
         setUsers(res.data.data);
@@ -80,7 +133,7 @@ const RegisteredUsers = () => {
         toast.error("Failed to fetch users");
       }
     } catch (err) {
-      toast.error(err || "Error fetching users");
+      toast.error(err?.response?.data?.message || "Error fetching users");
     } finally {
       setLoading(false);
     }
@@ -108,9 +161,10 @@ const RegisteredUsers = () => {
     }
   };
 
+  // Update useEffect to include filters
   useEffect(() => {
-    fetchUsers(page, search);
-  }, [page, search]);
+    fetchUsers(page, search, appliedFilters);
+  }, [page, search, appliedFilters]); // Add filters to dependency array
 
   const handleSearch = (e) => {
     setPage(1);
@@ -142,7 +196,7 @@ const RegisteredUsers = () => {
         setEditingUser(null);
 
         // Refresh the user list
-        fetchUsers(page, search);
+        fetchUsers(page, search, filters);
       } else {
         toast.error(res.data.message || "Failed to update member");
       }
@@ -208,22 +262,6 @@ const RegisteredUsers = () => {
   };
 
   // Function to handle referrer view
-  // const handleViewReferrer = (user) => {
-  //   if (user.referral?.referredByUser) {
-  //     setSelectedReferrer({
-  //       referrer: user.referral.referredByUser,
-  //       referredUserId: user.referredByUserId,
-  //       source: user.referral.source,
-  //       currentUser: {
-  //         userId: user.userId,
-  //         companyName: user.companyName,
-  //       },
-  //     });
-  //     setShowReferrerModal(true);
-  //   } else {
-  //     toast.info("This user was referred by Admin directly");
-  //   }
-  // };
   const handleViewReferrer = (user) => {
     if (user.referral?.referredByUser) {
       setSelectedReferrer({
@@ -250,6 +288,28 @@ const RegisteredUsers = () => {
   const closeReferrerModal = () => {
     setShowReferrerModal(false);
     setSelectedReferrer(null);
+  };
+
+  // Add filter handler functions
+  const handleApplyFilters = (filterSelections) => {
+    setPage(1);
+
+    // 🔥 MAP UI FILTER KEYS → BACKEND FILTER KEYS
+    const normalizedFilters = {
+      businessCategory: filterSelections.businessCategories || [],
+      businessType: filterSelections.businessTypes || [],
+      state: filterSelections.states || [],
+      district: filterSelections.districts || [],
+      taluk: filterSelections.taluks || [],
+      membershipPlan: filterSelections.membershipPlans || [],
+    };
+
+    setAppliedFilters(normalizedFilters);
+  };
+
+  const handleClearFilters = () => {
+    setAppliedFilters({});
+    setPage(1);
   };
 
   return (
@@ -568,18 +628,32 @@ const RegisteredUsers = () => {
             </div>
           </div>
 
-          {/* Search Bar */}
-          <div className="relative mb-8">
-            <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search by company, email, mobile, or user ID..."
-              value={search}
-              onChange={handleSearch}
-              className="w-full pl-12 pr-4 py-3.5 text-sm bg-white border border-gray-200 rounded-xl 
-                shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
-                transition-all duration-200 placeholder:text-gray-400"
-            />
+          {/* Search and Filters Row */}
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            {/* Search Bar */}
+            <div className="relative flex-1 max-w-2xl">
+              <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search by company, email, mobile, or user ID..."
+                value={search}
+                onChange={handleSearch}
+                className="w-full pl-12 pr-4 py-3.5 text-sm bg-white border border-gray-200 rounded-xl 
+                  shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                  transition-all duration-200 placeholder:text-gray-400"
+              />
+            </div>
+
+            {/* Filters Component */}
+            <div className="flex-shrink-0">
+              <UserFilters
+                filters={appliedFilters}
+                // setFilters={setAppliedFilters}
+                onApplyFilters={handleApplyFilters}
+                onClearFilters={handleClearFilters}
+              />
+            </div>
           </div>
         </div>
 
@@ -635,16 +709,19 @@ const RegisteredUsers = () => {
                 No Members Found
               </h3>
               <p className="text-gray-500 text-sm max-w-md text-center mb-6">
-                {search
-                  ? "No results match your search criteria."
+                {search || Object.values(filters).some(Boolean)
+                  ? "No results match your search/filter criteria."
                   : "There are no registered users in the system yet."}
               </p>
-              {search && (
+              {(search || Object.values(filters).some(Boolean)) && (
                 <button
-                  onClick={() => setSearch("")}
+                  onClick={() => {
+                    setSearch("");
+                    handleClearFilters();
+                  }}
                   className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                 >
-                  Clear search
+                  Clear search & filters
                 </button>
               )}
             </div>
@@ -1055,19 +1132,6 @@ const RegisteredUsers = () => {
                               </div>
                             </div>
                           </td>
-
-                          {/* View Button Column */}
-                          {/* <td className="px-6 py-4">
-                            <div className="flex justify-center">
-                              <button
-                                onClick={() => handleViewUser(user)}
-                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-lg hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 border border-blue-600 hover:border-blue-700"
-                              >
-                                <FiEye className="w-4 h-4" />
-                                View
-                              </button>
-                            </div>
-                          </td> */}
 
                           {/* Actions Column */}
                           <td className="px-6 py-4">
