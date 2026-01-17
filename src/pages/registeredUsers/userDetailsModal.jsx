@@ -15,6 +15,8 @@ import {
   FiCheckCircle,
   FiXCircle,
   FiClock,
+  FiShoppingBag,
+  FiPackage,
 } from "react-icons/fi";
 
 const UserDetailsModal = ({
@@ -25,6 +27,7 @@ const UserDetailsModal = ({
   getStatusConfig,
 }) => {
   if (!userDetails) return null;
+  console.log("user details modal", userDetails);
 
   const statusConfig = getStatusConfig
     ? getStatusConfig(userDetails.membership?.status)
@@ -42,6 +45,78 @@ const UserDetailsModal = ({
       month: "long",
       day: "numeric",
     });
+  };
+
+  // Function to render business nature section
+  const renderBusinessNature = () => {
+    const { manufacturer, trader } = userDetails.businessNature || {};
+
+    return (
+      <div className="space-y-4">
+        {/* Manufacturer Section */}
+        {manufacturer?.isManufacturer && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="px-3 py-1.5 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 text-sm font-medium rounded-lg border border-blue-200 flex items-center gap-2">
+                <FiPackage className="w-4 h-4" />
+                Manufacturer
+              </div>
+            </div>
+
+            {manufacturer.scale && manufacturer.scale.length > 0 && (
+              <div className="ml-1">
+                <div className="text-xs text-gray-500 mb-1">Scale:</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {manufacturer.scale.map((scale, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2.5 py-1 bg-gradient-to-r from-blue-100 to-blue-50 text-blue-800 text-xs font-medium rounded-full border border-blue-200"
+                    >
+                      {scale}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Trader Section */}
+        {trader?.isTrader && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="px-3 py-1.5 bg-gradient-to-r from-green-50 to-green-100 text-green-700 text-sm font-medium rounded-lg border border-green-200 flex items-center gap-2">
+                <FiShoppingBag className="w-4 h-4" />
+                Trader
+              </div>
+            </div>
+
+            {trader.type && trader.type.length > 0 && (
+              <div className="ml-1">
+                <div className="text-xs text-gray-500 mb-1">Type:</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {trader.type.map((type, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2.5 py-1 bg-gradient-to-r from-green-100 to-green-50 text-green-800 text-xs font-medium rounded-full border border-green-200"
+                    >
+                      {type}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Display if neither manufacturer nor trader */}
+        {!manufacturer?.isManufacturer && !trader?.isTrader && (
+          <div className="text-sm text-gray-400 italic">
+            No business nature specified
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -132,7 +207,6 @@ const UserDetailsModal = ({
                     <Field
                       label="Email"
                       value={userDetails.email}
-                      // icon={<FiMail className="w-4 h-4" />}
                       onCopy={() =>
                         onCopyToClipboard(userDetails.email, "Email")
                       }
@@ -143,7 +217,6 @@ const UserDetailsModal = ({
                     <Field
                       label="Mobile Number"
                       value={userDetails.mobileNumber}
-                      // icon={<FiPhone className="w-4 h-4" />}
                       onCopy={() =>
                         onCopyToClipboard(
                           userDetails.mobileNumber,
@@ -155,7 +228,6 @@ const UserDetailsModal = ({
                     <Field
                       label="Registration Date"
                       value={formatDate(userDetails.createdAt)}
-                      // icon={<FiCalendar className="w-4 h-4" />}
                     />
                   </div>
                 </div>
@@ -191,39 +263,38 @@ const UserDetailsModal = ({
                 icon={<FiBriefcase className="w-5 h-5 text-purple-600" />}
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <Field
                       label="Business Category"
                       value={
                         userDetails.businessCategoryName ||
+                        userDetails.businessCategory?.name ||
                         userDetails.businessCategory
                       }
                       className="from-purple-50 to-purple-100 border-purple-200"
                     />
-                    <Field label="Business Type">
-                      {Array.isArray(userDetails.businessType) &&
-                      userDetails.businessType.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                          {userDetails.businessType.map((type, index) => (
-                            <Badge key={index} text={type} />
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-500">
-                          Not specified
-                        </span>
-                      )}
-                    </Field>
+
+                    <div>
+                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                        Business Nature
+                      </div>
+                      {renderBusinessNature()}
+                    </div>
                   </div>
+
                   <div className="space-y-4">
                     <Field
                       label="Major Commodities"
-                      value={userDetails.majorCommodities}
+                      value={
+                        Array.isArray(userDetails.majorCommodities)
+                          ? userDetails.majorCommodities.join(", ")
+                          : userDetails.majorCommodities
+                      }
+                      multiLine
                     />
                     <Field
                       label="GST Number"
                       value={userDetails.gstNumber}
-                      // icon={<FiFileText className="w-4 h-4" />}
                       onCopy={() =>
                         onCopyToClipboard(userDetails.gstNumber, "GST Number")
                       }
@@ -317,6 +388,35 @@ Mobile: ${userDetails.mobileNumber}
 Address: ${userDetails.address?.street}, ${userDetails.address?.taluk}, ${
                 userDetails.address?.district
               }, ${userDetails.address?.state}
+Business Category: ${
+                userDetails.businessCategoryName ||
+                userDetails.businessCategory?.name ||
+                userDetails.businessCategory
+              }
+Business Nature: ${
+                userDetails.businessNature?.manufacturer?.isManufacturer
+                  ? "Manufacturer" +
+                    (userDetails.businessNature.manufacturer.scale?.length > 0
+                      ? ` (${userDetails.businessNature.manufacturer.scale.join(
+                          ", "
+                        )})`
+                      : "")
+                  : ""
+              }${
+                userDetails.businessNature?.manufacturer?.isManufacturer &&
+                userDetails.businessNature?.trader?.isTrader
+                  ? ", "
+                  : ""
+              }${
+                userDetails.businessNature?.trader?.isTrader
+                  ? "Trader" +
+                    (userDetails.businessNature.trader.type?.length > 0
+                      ? ` (${userDetails.businessNature.trader.type.join(
+                          ", "
+                        )})`
+                      : "")
+                  : ""
+              }
 GST: ${userDetails.gstNumber || "N/A"}
 Bank: ${userDetails.bankDetails?.bankName || "N/A"} - ${
                 userDetails.bankDetails?.accountNumber || "N/A"
@@ -427,6 +527,7 @@ const Field = ({
   copyable = false,
   multiLine = false,
   monospace = false,
+  className,
 }) => (
   <div className="flex flex-col gap-1">
     {/* Label */}
@@ -441,7 +542,7 @@ const Field = ({
       <div
         className={`
           flex-1 min-h-[48px] px-3 py-2 rounded-lg
-          bg-gray-50 border border-gray-200
+          ${className || "bg-gray-50 border border-gray-200"}
           text-sm font-medium text-gray-900
           ${multiLine ? "whitespace-pre-wrap items-start" : "flex items-center"}
           ${monospace ? "font-mono" : ""}
@@ -460,12 +561,6 @@ const Field = ({
       )}
     </div>
   </div>
-);
-
-const Badge = ({ text }) => (
-  <span className="inline-block px-3 py-1.5 bg-gradient-to-r from-gray-100 to-gray-50 text-gray-700 text-sm font-medium rounded-lg border border-gray-200">
-    {text}
-  </span>
 );
 
 const ReferralBadge = ({ source }) => (
