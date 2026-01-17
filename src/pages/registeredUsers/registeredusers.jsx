@@ -44,6 +44,8 @@ const RegisteredUsers = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
 
+  console.log("users overall", users);
+
   // Add filters state
   const [filters, setFilters] = useState({
     businessCategory: "",
@@ -67,6 +69,7 @@ const RegisteredUsers = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [appliedFilters, setAppliedFilters] = useState({});
+  console.log("selected referrer", selectedReferrer);
 
   /* =========================
      FETCH USERS WITH FILTERS
@@ -124,6 +127,8 @@ const RegisteredUsers = () => {
         }
       });
 
+      console.log("API FILTER PARAMS:", params);
+
       const res = await api.get("/users/fetch-user-details", { params });
 
       if (res.data.success) {
@@ -143,7 +148,7 @@ const RegisteredUsers = () => {
     try {
       setLoadingUserDetails(true);
       const res = await api.get(`/users/user/${userId}`);
-      console.log("response", res);
+      console.log("response individual", res);
 
       if (res.data.success) {
         setUserDetails(res.data.data);
@@ -294,17 +299,17 @@ const RegisteredUsers = () => {
   const handleApplyFilters = (filterSelections) => {
     setPage(1);
 
-    // 🔥 MAP UI FILTER KEYS → BACKEND FILTER KEYS
-    const normalizedFilters = {
-      businessCategory: filterSelections.businessCategories || [],
-      businessType: filterSelections.businessTypes || [],
-      state: filterSelections.states || [],
-      district: filterSelections.districts || [],
-      taluk: filterSelections.taluks || [],
-      membershipPlan: filterSelections.membershipPlans || [],
-    };
+    // const normalizedFilters = {
+    //   businessCategory: filterSelections.businessCategories || [],
+    //   state: filterSelections.states || [],
+    //   district: filterSelections.districts || [],
+    //   taluk: filterSelections.taluks || [],
+    //   membershipPlan: filterSelections.membershipPlans || [],
+    //   manufacturerScale: filterSelections.manufacturerScales || [],
+    //   traderType: filterSelections.traderTypes || [],
+    // };
 
-    setAppliedFilters(normalizedFilters);
+    setAppliedFilters(filterSelections);
   };
 
   const handleClearFilters = () => {
@@ -315,12 +320,12 @@ const RegisteredUsers = () => {
   return (
     <AdminLayout>
       <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
-        <ToastContainer
+        {/* <ToastContainer
           position="top-right"
           autoClose={3000}
           className="!z-[9999]"
           toastClassName="!bg-white !text-gray-800 !border !border-gray-200 !rounded-xl !shadow-lg"
-        />
+        /> */}
 
         {/* Address Modal */}
         {showAddressModal && selectedAddress && (
@@ -431,144 +436,153 @@ const RegisteredUsers = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fadeIn">
               {/* Modal Header */}
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex-shrink-0">
                     <FiUser className="w-5 h-5 text-white" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900">
+
+                  <div className="min-w-0 max-w-[220px]">
+                    <h3 className="text-lg font-bold text-gray-900 leading-tight truncate">
                       Referrer Details
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 truncate">
                       Referral information for{" "}
-                      {selectedReferrer.currentUser.companyName}
+                      <span className="font-medium">
+                        {selectedReferrer.currentUser.companyName}
+                      </span>
                     </p>
                   </div>
                 </div>
+
                 <button
                   onClick={closeReferrerModal}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                 >
                   <FiX className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
 
               {/* Modal Body */}
-              <div className="px-6 py-5">
-                <div className="space-y-6">
-                  {/* Current User */}
-                  <div className="bg-blue-50 p-4 rounded-xl">
-                    <div className="text-xs text-blue-600 font-semibold mb-2">
-                      CURRENT USER
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-bold text-gray-900">
-                          {selectedReferrer.currentUser.companyName}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          ID: {selectedReferrer.currentUser.userId}
-                        </div>
+              <div className="px-6 py-5 space-y-6">
+                {/* Current User */}
+                {/* <div className="bg-blue-50 p-4 rounded-xl">
+                  <div className="text-xs text-blue-600 font-semibold mb-2 uppercase tracking-wider">
+                    Current User
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-gray-900 truncate">
+                        {selectedReferrer.currentUser.companyName}
                       </div>
-                      <div
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          selectedReferrer.source === "ADMIN"
-                            ? "bg-purple-100 text-purple-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
-                      >
-                        {selectedReferrer.source === "ADMIN"
-                          ? "Admin Referral"
-                          : "User Referral"}
+                      <div className="text-xs text-gray-500 mt-1">
+                        ID:{" "}
+                        <span className="font-mono">
+                          {selectedReferrer.currentUser.userId}
+                        </span>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${
+                        selectedReferrer.source === "ADMIN"
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {selectedReferrer.source === "ADMIN"
+                        ? "Admin Referral"
+                        : "User Referral"}
+                    </span>
+                  </div>
+                </div> */}
+
+                {/* Referrer Details */}
+                <div>
+                  <div className="text-sm font-semibold text-gray-700 mb-3">
+                    Referred By
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-gradient-to-br from-green-100 to-green-50 rounded-lg flex-shrink-0">
+                      <FiUser className="w-5 h-5 text-green-600" />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold text-gray-900 truncate">
+                        {selectedReferrer.referrer.companyName || "N/A"}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1 truncate">
+                        User ID:{" "}
+                        <span className="font-mono">
+                          {selectedReferrer.referrer.userId || "N/A"}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Referrer Details */}
-                  <div>
-                    <div className="text-sm font-semibold text-gray-700 mb-3">
-                      Referred By
-                    </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gradient-to-br from-green-100 to-green-50 rounded-lg">
-                          <FiUser className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-bold text-gray-900">
-                            {selectedReferrer.referrer.companyName || "N/A"}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            User ID: {selectedReferrer.referrer.userId || "N/A"}
-                          </div>
-                        </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                    <div className="space-y-1 h-full">
+                      <div className="text-xs text-gray-500">Email</div>
+                      <div className="text-sm font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-lg truncate">
+                        {selectedReferrer.referrer.email || "Not available"}
                       </div>
+                    </div>
 
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <div className="text-xs text-gray-500 mb-1">
-                            Email
-                          </div>
-                          <div className="text-sm font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-lg truncate">
-                            {selectedReferrer.referrer.email || "Not available"}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-gray-500 mb-1">
-                            Mobile
-                          </div>
-                          <div className="text-sm font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                            {selectedReferrer.referrer.mobileNumber ||
-                              "Not available"}
-                          </div>
-                        </div>
+                    <div className="space-y-1 h-full">
+                      <div className="text-xs text-gray-500">Mobile</div>
+                      <div className="text-sm font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                        {selectedReferrer.referrer.mobileNumber ||
+                          "Not available"}
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Referral Info */}
-                  <div className="border-t border-gray-100 pt-4">
-                    <div className="text-xs text-gray-500 mb-2">
-                      Referral Source
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {selectedReferrer.source === "ADMIN" ? (
-                        <>
-                          <div className="p-1.5 bg-purple-100 rounded-md">
-                            <FiUsers className="w-4 h-4 text-purple-600" />
-                          </div>
-                          <span className="text-sm text-gray-700">
-                            Directly registered by Admin
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <div className="p-1.5 bg-green-100 rounded-md">
-                            <FiLink className="w-4 h-4 text-green-600" />
-                          </div>
-                          <span className="text-sm text-gray-700">
-                            Referred by another member
-                          </span>
-                        </>
-                      )}
-                    </div>
+                {/* Referral Info */}
+                <div className="border-t border-gray-100 pt-4">
+                  <div className="text-xs text-gray-500 mb-2 uppercase tracking-wider">
+                    Referral Source
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {selectedReferrer.source === "ADMIN" ? (
+                      <>
+                        <div className="p-1.5 bg-purple-100 rounded-md flex-shrink-0">
+                          <FiUsers className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <span className="text-sm text-gray-700">
+                          Directly registered by Admin
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="p-1.5 bg-green-100 rounded-md flex-shrink-0">
+                          <FiLink className="w-4 h-4 text-green-600" />
+                        </div>
+                        <span className="text-sm text-gray-700">
+                          Referred by another member
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* Modal Footer */}
-              <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+              <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
                 <button
-                  onClick={() => {
+                  onClick={() =>
                     copyToClipboard(
                       selectedReferrer.referrer.userId,
                       "Referrer User ID"
-                    );
-                  }}
-                  className="px-4 py-2.5 bg-gradient-to-r from-gray-100 to-gray-50 text-gray-700 font-medium rounded-lg hover:shadow-sm transition-all duration-200 flex items-center gap-2"
+                    )
+                  }
+                  disabled={!selectedReferrer.referrer.userId}
+                  className="px-4 py-2.5 bg-gradient-to-r from-gray-100 to-gray-50 text-gray-700 font-medium rounded-lg hover:shadow-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
                 >
-                  <FiCopy className="w-4 h-4" />
+                  <FiCopy className="w-4 h-4 flex-shrink-0" />
                   Copy Referrer ID
                 </button>
               </div>
@@ -648,7 +662,8 @@ const RegisteredUsers = () => {
             {/* Filters Component */}
             <div className="flex-shrink-0">
               <UserFilters
-                filters={appliedFilters}
+                // filters={appliedFilters}
+                appliedFilters={appliedFilters}
                 // setFilters={setAppliedFilters}
                 onApplyFilters={handleApplyFilters}
                 onClearFilters={handleClearFilters}
@@ -709,21 +724,27 @@ const RegisteredUsers = () => {
                 No Members Found
               </h3>
               <p className="text-gray-500 text-sm max-w-md text-center mb-6">
-                {search || Object.values(filters).some(Boolean)
+                {search ||
+                Object.values(appliedFilters).some((v) =>
+                  Array.isArray(v) ? v.length > 0 : Boolean(v)
+                )
                   ? "No results match your search/filter criteria."
                   : "There are no registered users in the system yet."}
               </p>
-              {(search || Object.values(filters).some(Boolean)) && (
-                <button
-                  onClick={() => {
-                    setSearch("");
-                    handleClearFilters();
-                  }}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  Clear search & filters
-                </button>
-              )}
+              {search ||
+                (Object.values(appliedFilters).some((v) =>
+                  Array.isArray(v) ? v.length > 0 : Boolean(v)
+                ) && (
+                  <button
+                    onClick={() => {
+                      setSearch("");
+                      handleClearFilters();
+                    }}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    Clear search & filters
+                  </button>
+                ))}
             </div>
           )}
 
@@ -960,7 +981,7 @@ const RegisteredUsers = () => {
                           </td>
 
                           {/* Business Column */}
-                          <td className="px-6 py-4">
+                          {/* <td className="px-6 py-4">
                             <div className="space-y-3">
                               <div>
                                 <div className="text-xs text-gray-500 mb-1.5">
@@ -994,6 +1015,114 @@ const RegisteredUsers = () => {
                                   </div>
                                 </div>
                               )}
+                            </div>
+                          </td> */}
+                          {/* Business Column */}
+                          <td className="px-6 py-4">
+                            <div className="space-y-3">
+                              {/* Business Category */}
+                              <div>
+                                <div className="text-xs text-gray-500 mb-1.5">
+                                  Category
+                                </div>
+                                <div className="text-sm font-medium text-gray-900 bg-gray-50 px-3 py-1.5 rounded-lg">
+                                  {user.businessCategory?.name || "—"}
+                                </div>
+                              </div>
+
+                              {/* Business Nature - Manufacturer/Trader */}
+                              <div>
+                                <div className="text-xs text-gray-500 mb-1.5">
+                                  Business Nature
+                                </div>
+                                <div className="space-y-2">
+                                  {/* Manufacturer Section */}
+                                  {user.businessNature?.manufacturer
+                                    ?.isManufacturer && (
+                                    <div className="flex items-center gap-2">
+                                      <div className="px-2 py-1 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 text-xs font-medium rounded-md border border-blue-200">
+                                        Manufacturer
+                                      </div>
+                                      {user.businessNature.manufacturer.scale &&
+                                        user.businessNature.manufacturer.scale
+                                          .length > 0 && (
+                                          <div className="flex gap-1">
+                                            {user.businessNature.manufacturer.scale.map(
+                                              (scale, idx) => (
+                                                <span
+                                                  key={idx}
+                                                  className="px-2 py-1 bg-gradient-to-r from-blue-100 to-blue-50 text-blue-800 text-xs font-medium rounded-full border border-blue-200"
+                                                >
+                                                  {scale}
+                                                </span>
+                                              )
+                                            )}
+                                          </div>
+                                        )}
+                                    </div>
+                                  )}
+
+                                  {/* Trader Section */}
+                                  {user.businessNature?.trader?.isTrader && (
+                                    <div className="flex items-center gap-2">
+                                      <div className="px-2 py-1 bg-gradient-to-r from-green-50 to-green-100 text-green-700 text-xs font-medium rounded-md border border-green-200">
+                                        Trader
+                                      </div>
+                                      {user.businessNature.trader.type &&
+                                        user.businessNature.trader.type.length >
+                                          0 && (
+                                          <div className="flex gap-1">
+                                            {user.businessNature.trader.type.map(
+                                              (type, idx) => (
+                                                <span
+                                                  key={idx}
+                                                  className="px-2 py-1 bg-gradient-to-r from-green-100 to-green-50 text-green-800 text-xs font-medium rounded-full border border-green-200"
+                                                >
+                                                  {type}
+                                                </span>
+                                              )
+                                            )}
+                                          </div>
+                                        )}
+                                    </div>
+                                  )}
+
+                                  {/* Display if neither manufacturer nor trader */}
+                                  {!user.businessNature?.manufacturer
+                                    ?.isManufacturer &&
+                                    !user.businessNature?.trader?.isTrader && (
+                                      <div className="text-xs text-gray-400 italic">
+                                        No business nature specified
+                                      </div>
+                                    )}
+                                </div>
+                              </div>
+
+                              {/* Business Types (keep existing) */}
+                              {/* {user.businessType?.length > 0 && (
+                                <div>
+                                  <div className="text-xs text-gray-500 mb-1.5">
+                                    Business Type
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {user.businessType
+                                      .slice(0, 2)
+                                      .map((type, index) => (
+                                        <span
+                                          key={index}
+                                          className="inline-block px-2.5 py-1 bg-gradient-to-r from-gray-100 to-gray-50 text-gray-700 text-xs font-medium rounded-full border border-gray-200"
+                                        >
+                                          {type}
+                                        </span>
+                                      ))}
+                                    {user.businessType.length > 2 && (
+                                      <span className="inline-block px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">
+                                        +{user.businessType.length - 2}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )} */}
                             </div>
                           </td>
 

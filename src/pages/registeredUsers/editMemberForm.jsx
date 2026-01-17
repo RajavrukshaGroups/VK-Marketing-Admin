@@ -9,6 +9,8 @@ import {
   FiCreditCard,
   FiFileText,
   FiSave,
+  FiPackage,
+  FiShoppingBag,
 } from "react-icons/fi";
 import api from "../../api/axios";
 
@@ -26,7 +28,16 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
     mobileNumber: "",
     email: "",
     businessCategory: "",
-    businessType: [],
+    businessNature: {
+      manufacturer: {
+        isManufacturer: false,
+        scale: [],
+      },
+      trader: {
+        isTrader: false,
+        type: [],
+      },
+    },
     majorCommodities: "",
     gstNumber: "",
     bankDetails: {
@@ -34,27 +45,24 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
       accountNumber: "",
       ifscCode: "",
     },
-    // membershipPlans: "",
     membershipPlan: "",
     isActive: true,
   });
-  console.log("user", user);
 
   const [businessCategories, setBusinessCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
-  const businessTypeOptions = ["WHOLESALE", "RETAIL"];
   const [membershipPlans, setMembershipPlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
-  console.log("membership plans", membershipPlans);
 
-  const preselectedPlan = user.membership?.plan?.name;
-  console.log("preselected plan", preselectedPlan);
-
-  // Fetch business categories on mount
+  // Business nature options
+  const manufacturerScaleOptions = ["LARGE", "MSME"];
+  const traderTypeOptions = ["WHOLESALE", "RETAIL"];
 
   // Populate form when user data changes
   useEffect(() => {
     if (user) {
+      console.log("User data in edit modal:", user);
+
       setFormData({
         companyName: user.companyName || "",
         proprietors: user.proprietors || "",
@@ -71,7 +79,16 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
           typeof user.businessCategory === "object"
             ? user.businessCategory._id
             : user.businessCategory || "",
-        businessType: Array.isArray(user.businessType) ? user.businessType : [],
+        businessNature: user.businessNature || {
+          manufacturer: {
+            isManufacturer: false,
+            scale: [],
+          },
+          trader: {
+            isTrader: false,
+            type: [],
+          },
+        },
         majorCommodities: Array.isArray(user.majorCommodities)
           ? user.majorCommodities.join(", ")
           : user.majorCommodities || "",
@@ -81,7 +98,6 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
           accountNumber: user.bankDetails?.accountNumber || "",
           ifscCode: user.bankDetails?.ifscCode || "",
         },
-        // membershipPlan: user.membershipPlan?.plan || "",
         membershipPlan: user.membership?.plan?._id || "",
         isActive: user.isActive ?? true,
       });
@@ -92,8 +108,6 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
     try {
       setLoadingCategories(true);
       const res = await api.get("/admin/category/getCategories");
-      console.log("response", res);
-
       if (res.data.success) {
         setBusinessCategories(res.data?.data);
       }
@@ -110,8 +124,6 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
       const res = await api.get(
         "/admin/businessplans/view-membershipplans/regform"
       );
-      console.log("response edit", res);
-
       if (res.data.success) {
         setMembershipPlans(res.data?.data);
       }
@@ -121,6 +133,11 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
       setLoadingPlans(false);
     }
   };
+
+  useEffect(() => {
+    fetchBusinessCategories();
+    fetchMembershipPlans();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -152,26 +169,89 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
     }));
   };
 
-  const handleBusinessTypeChange = (type) => {
+  // Handle manufacturer toggle
+  const handleManufacturerToggle = () => {
+    setFormData((prev) => ({
+      ...prev,
+      businessNature: {
+        ...prev.businessNature,
+        manufacturer: {
+          ...prev.businessNature.manufacturer,
+          isManufacturer: !prev.businessNature.manufacturer.isManufacturer,
+          scale: !prev.businessNature.manufacturer.isManufacturer
+            ? prev.businessNature.manufacturer.scale
+            : [],
+        },
+      },
+    }));
+  };
+
+  // Handle manufacturer scale selection
+  const handleManufacturerScaleChange = (scale) => {
     setFormData((prev) => {
-      const currentTypes = [...prev.businessType];
-      if (currentTypes.includes(type)) {
-        return {
-          ...prev,
-          businessType: currentTypes.filter((t) => t !== type),
-        };
+      const currentScales = [...prev.businessNature.manufacturer.scale];
+      let newScales;
+
+      if (currentScales.includes(scale)) {
+        newScales = currentScales.filter((s) => s !== scale);
       } else {
-        return {
-          ...prev,
-          businessType: [...currentTypes, type],
-        };
+        newScales = [...currentScales, scale];
       }
+
+      return {
+        ...prev,
+        businessNature: {
+          ...prev.businessNature,
+          manufacturer: {
+            ...prev.businessNature.manufacturer,
+            scale: newScales,
+          },
+        },
+      };
     });
   };
-  useEffect(() => {
-    fetchBusinessCategories();
-    fetchMembershipPlans();
-  }, []);
+
+  // Handle trader toggle
+  const handleTraderToggle = () => {
+    setFormData((prev) => ({
+      ...prev,
+      businessNature: {
+        ...prev.businessNature,
+        trader: {
+          ...prev.businessNature.trader,
+          isTrader: !prev.businessNature.trader.isTrader,
+          type: !prev.businessNature.trader.isTrader
+            ? prev.businessNature.trader.type
+            : [],
+        },
+      },
+    }));
+  };
+
+  // Handle trader type selection
+  const handleTraderTypeChange = (type) => {
+    setFormData((prev) => {
+      const currentTypes = [...prev.businessNature.trader.type];
+      let newTypes;
+
+      if (currentTypes.includes(type)) {
+        newTypes = currentTypes.filter((t) => t !== type);
+      } else {
+        newTypes = [...currentTypes, type];
+      }
+
+      return {
+        ...prev,
+        businessNature: {
+          ...prev.businessNature,
+          trader: {
+            ...prev.businessNature.trader,
+            type: newTypes,
+          },
+        },
+      };
+    });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -202,9 +282,29 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
     if (!formData.businessCategory) {
       return "Business category is required";
     }
-    if (formData.businessType.length === 0) {
-      return "At least one business type must be selected";
+
+    // Business nature validation
+    if (
+      !formData.businessNature.manufacturer.isManufacturer &&
+      !formData.businessNature.trader.isTrader
+    ) {
+      return "Select at least one business nature (Manufacturer or Trader)";
     }
+
+    if (
+      formData.businessNature.manufacturer.isManufacturer &&
+      formData.businessNature.manufacturer.scale.length === 0
+    ) {
+      return "Select at least one manufacturer scale";
+    }
+
+    if (
+      formData.businessNature.trader.isTrader &&
+      formData.businessNature.trader.type.length === 0
+    ) {
+      return "Select at least one trader type";
+    }
+
     if (!formData.address.pin) {
       return "PIN code is required";
     }
@@ -409,7 +509,8 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
                   Business Information
                 </h4>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-6">
+                {/* Business Category */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Business Category *
@@ -436,33 +537,128 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
                   )}
                 </div>
 
-                <div>
+                {/* Business Nature */}
+                <div className="space-y-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Business Type *
+                    Business Nature *
                   </label>
-                  <div className="flex flex-wrap gap-2">
-                    {businessTypeOptions.map((type) => (
+
+                  {/* Manufacturer Section */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
                       <button
-                        key={type}
                         type="button"
-                        onClick={() => handleBusinessTypeChange(type)}
-                        className={`px-3 py-2 rounded-lg border transition-colors ${
-                          formData.businessType.includes(type)
-                            ? "bg-purple-100 text-purple-700 border-purple-300"
+                        onClick={handleManufacturerToggle}
+                        className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition-colors ${
+                          formData.businessNature.manufacturer.isManufacturer
+                            ? "bg-blue-100 text-blue-700 border-blue-300"
                             : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                         }`}
                       >
-                        {type}
+                        <FiPackage className="w-4 h-4" />
+                        <span>Manufacturer</span>
                       </button>
-                    ))}
+
+                      {formData.businessNature.manufacturer.isManufacturer && (
+                        <div className="flex-1">
+                          <div className="text-xs text-gray-500 mb-2">
+                            Scale:
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {manufacturerScaleOptions.map((scale) => (
+                              <button
+                                key={scale}
+                                type="button"
+                                onClick={() =>
+                                  handleManufacturerScaleChange(scale)
+                                }
+                                className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                                  formData.businessNature.manufacturer.scale.includes(
+                                    scale
+                                  )
+                                    ? "bg-blue-500 text-white border-blue-600"
+                                    : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                                }`}
+                              >
+                                {scale}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {formData.businessNature.manufacturer.isManufacturer &&
+                      formData.businessNature.manufacturer.scale.length ===
+                        0 && (
+                        <p className="text-sm text-red-500">
+                          Select at least one manufacturer scale
+                        </p>
+                      )}
                   </div>
-                  {formData.businessType.length === 0 && (
-                    <p className="text-sm text-red-500 mt-1">
-                      Select at least one business type
-                    </p>
-                  )}
+
+                  {/* Trader Section */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleTraderToggle}
+                        className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition-colors ${
+                          formData.businessNature.trader.isTrader
+                            ? "bg-green-100 text-green-700 border-green-300"
+                            : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                        }`}
+                      >
+                        <FiShoppingBag className="w-4 h-4" />
+                        <span>Trader</span>
+                      </button>
+
+                      {formData.businessNature.trader.isTrader && (
+                        <div className="flex-1">
+                          <div className="text-xs text-gray-500 mb-2">
+                            Type:
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {traderTypeOptions.map((type) => (
+                              <button
+                                key={type}
+                                type="button"
+                                onClick={() => handleTraderTypeChange(type)}
+                                className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                                  formData.businessNature.trader.type.includes(
+                                    type
+                                  )
+                                    ? "bg-green-500 text-white border-green-600"
+                                    : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                                }`}
+                              >
+                                {type}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {formData.businessNature.trader.isTrader &&
+                      formData.businessNature.trader.type.length === 0 && (
+                        <p className="text-sm text-red-500">
+                          Select at least one trader type
+                        </p>
+                      )}
+                  </div>
+
+                  {/* Validation message */}
+                  {!formData.businessNature.manufacturer.isManufacturer &&
+                    !formData.businessNature.trader.isTrader && (
+                      <p className="text-sm text-red-500">
+                        Select at least one business nature (Manufacturer or
+                        Trader)
+                      </p>
+                    )}
                 </div>
 
+                {/* Major Commodities */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Major Commodities
@@ -477,6 +673,7 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
                   />
                 </div>
 
+                {/* GST Number */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     GST Number
@@ -542,7 +739,6 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
               </div>
             </div>
 
-            {/*membership plans*/}
             {/* Membership Plan */}
             <div className="border border-gray-200 rounded-xl p-5">
               <div className="flex items-center gap-2 mb-4">
@@ -563,11 +759,10 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
                     onChange={handleInputChange}
                     disabled={loadingPlans}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg
-          focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                     required
                   >
                     <option value="">Select Membership Plan</option>
-                    {/* <option value={preselectedPlan}>Select Membership Plan</option> */}
                     {membershipPlans.map((plan) => (
                       <option key={plan._id} value={plan._id}>
                         {plan.name} – ₹{plan.amount}
@@ -585,7 +780,6 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
                   )}
                 </div>
 
-                {/* Read-only info */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Membership Status
