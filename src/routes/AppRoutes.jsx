@@ -7,6 +7,7 @@ import RegisteredUsers from "../pages/registeredUsers/registeredusers";
 import MembershipTypes from "../pages/membership-details/MembershipTypes";
 import EditMembershipTypes from "../pages/membership-details/EditMembershipTypes";
 import ListAllPayments from "../pages/payments/listAllPayments";
+import AddMemberAdminForm from "../pages/registeredUsers/addMemberForm";
 
 const AppRoutes = () => {
   return (
@@ -51,6 +52,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <EditMembershipTypes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/add-membership"
+          element={
+            <ProtectedRoute>
+              <AddMemberAdminForm />
             </ProtectedRoute>
           }
         />

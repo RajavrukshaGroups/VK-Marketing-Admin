@@ -18,6 +18,10 @@ import {
   FiCalendar,
   FiEye,
   FiExternalLink,
+  FiEdit,
+  FiX,
+  FiSave,
+  FiLoader,
 } from "react-icons/fi";
 import "react-toastify/dist/ReactToastify.css";
 import AdminLayout from "../../components/layout/AdminLayout";
@@ -30,6 +34,18 @@ export default function ListAllPayments() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [totalPayments, setTotalPayments] = useState(0);
+
+  // Edit modal states
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    paymentSource: "",
+    transactionId: "",
+    amount: "",
+    status: "",
+  });
+  const [editLoading, setEditLoading] = useState(false);
+  const [fetchingPayment, setFetchingPayment] = useState(false);
 
   /* =========================
      FETCH PAYMENTS
@@ -125,15 +141,329 @@ export default function ListAllPayments() {
     }).format(amount);
   };
 
+  /* =========================
+     EDIT PAYMENT HANDLERS
+  ========================= */
+  const handleEditClick = async (paymentId) => {
+    try {
+      setFetchingPayment(true);
+      const res = await api.get(
+        `/admin/payment/admin/view-payment/${paymentId}`
+      );
+      console.log("response edit", res);
+
+      if (res.data.success) {
+        const paymentData = res.data.data;
+
+        // Check if payment is from Razorpay (cannot be edited)
+        if (paymentData.razorpay?.paymentId) {
+          toast.error("Razorpay payments cannot be edited");
+          return;
+        }
+
+        // Prepare form data
+        setEditFormData({
+          paymentSource:
+            paymentData.adminPanelPayment?.source ||
+            paymentData.paymentSource ||
+            "",
+          transactionId:
+            paymentData.adminPanelPayment?.transactionId ||
+            paymentData.transactionId ||
+            "",
+          amount: paymentData.amount || "",
+          status: paymentData.status || "",
+        });
+
+        setEditingPayment(paymentData);
+        setEditModalOpen(true);
+      } else {
+        toast.error("Failed to fetch payment details");
+      }
+    } catch (err) {
+      console.error("Fetch payment error:", err);
+      toast.error(
+        err?.response?.data?.message || "Failed to fetch payment details"
+      );
+    } finally {
+      setFetchingPayment(false);
+    }
+  };
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editingPayment) return;
+
+    try {
+      setEditLoading(true);
+
+      const res = await api.put(
+        `/admin/payment/admin/payment/edit/${editingPayment._id}`,
+        editFormData
+      );
+
+      if (res.data.success) {
+        toast.success("Payment record updated successfully");
+        setEditModalOpen(false);
+        setEditingPayment(null);
+        fetchPayments(page, search); // Refresh the list
+      } else {
+        toast.error(res.data.message || "Failed to update payment");
+      }
+    } catch (err) {
+      console.error("Update error:", err);
+      toast.error(
+        err?.response?.data?.message || "Failed to update payment record"
+      );
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setEditingPayment(null);
+    setEditFormData({
+      paymentSource: "",
+      transactionId: "",
+      amount: "",
+      status: "",
+    });
+  };
+
+  /* =========================
+     PAYMENT SOURCE OPTIONS
+  ========================= */
+  const paymentSourceOptions = [
+    { value: "ADMIN", label: "Admin Added" },
+    { value: "CASH", label: "Cash" },
+    { value: "CHEQUE", label: "Cheque" },
+    { value: "UPI", label: "UPI" },
+    { value: "NEFT", label: "NEFT" },
+    { value: "IMPS", label: "IMPS" },
+  ];
+
+  const statusOptions = [
+    { value: "SUCCESS", label: "Success" },
+    { value: "PENDING", label: "Pending" },
+    { value: "FAILED", label: "Failed" },
+    { value: "CANCELLED", label: "Cancelled" },
+  ];
+
   return (
     <AdminLayout>
       <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
-        <ToastContainer
+        {/* <ToastContainer
           position="top-right"
           autoClose={3000}
           className="!z-[9999]"
           toastClassName="!bg-white !text-gray-800 !border !border-gray-200 !rounded-xl !shadow-lg"
-        />
+        /> */}
+
+        {/* Edit Payment Modal */}
+        {editModalOpen && editingPayment && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fadeIn max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg">
+                    <FiEdit className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">
+                      Edit Payment Record
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {editingPayment.companyName ||
+                        editingPayment.user?.companyName}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeEditModal}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <FiX className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="px-6 py-5">
+                <form onSubmit={handleEditSubmit} className="space-y-6">
+                  {/* Payment ID */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Payment ID
+                    </label>
+                    <input
+                      type="text"
+                      value={editingPayment._id}
+                      readOnly
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-500 text-sm"
+                    />
+                  </div>
+
+                  {/* Company Info */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Company Name
+                      </label>
+                      <input
+                        type="text"
+                        value={
+                          editingPayment.companyName ||
+                          editingPayment.user?.companyName ||
+                          "N/A"
+                        }
+                        readOnly
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-500 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        User ID
+                      </label>
+                      <input
+                        type="text"
+                        value={editingPayment.user?.userId || "N/A"}
+                        readOnly
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-500 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Payment Source */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Payment Source *
+                    </label>
+                    <select
+                      name="paymentSource"
+                      value={editFormData.paymentSource}
+                      onChange={handleEditFormChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      required
+                    >
+                      <option value="">Select Payment Source</option>
+                      {paymentSourceOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Transaction ID */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Transaction ID
+                    </label>
+                    <input
+                      type="text"
+                      name="transactionId"
+                      value={editFormData.transactionId}
+                      onChange={handleEditFormChange}
+                      placeholder="Enter transaction ID if available"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Required for UPI, NEFT, IMPS, CHEQUE payments
+                    </p>
+                  </div>
+
+                  {/* Amount */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Amount (₹) *
+                    </label>
+                    <input
+                      type="number"
+                      name="amount"
+                      value={editFormData.amount}
+                      onChange={handleEditFormChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      required
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Status *
+                    </label>
+                    <select
+                      name="status"
+                      value={editFormData.status}
+                      onChange={handleEditFormChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      required
+                    >
+                      <option value="">Select Status</option>
+                      {statusOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Current Membership Plan */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Membership Plan
+                    </label>
+                    <input
+                      type="text"
+                      value={editingPayment.membershipPlan?.name || "N/A"}
+                      readOnly
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-500 text-sm"
+                    />
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={closeEditModal}
+                      className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={editLoading}
+                      className="px-4 py-2 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {editLoading ? (
+                        <>
+                          <FiLoader className="w-4 h-4 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          <FiSave className="w-4 h-4" />
+                          Update Payment
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Header Section */}
         <div className="mb-8">
@@ -284,13 +614,19 @@ export default function ListAllPayments() {
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">
                         Status
                       </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
 
                   <tbody className="divide-y divide-gray-100">
                     {payments.map((payment) => {
+                      const isRazorpay = !!payment.razorpay;
+                      const isAdminPayment = !!payment.adminPanelPayment;
                       const statusConfig = getStatusConfig(payment.status);
                       const isSuccess = payment.status === "SUCCESS";
+                      const canEdit = !isRazorpay && isAdminPayment;
 
                       return (
                         <tr
@@ -427,67 +763,114 @@ export default function ListAllPayments() {
                           {/* Transaction Column */}
                           <td className="px-6 py-4">
                             <div className="space-y-3">
-                              <div>
-                                <div className="text-xs text-gray-500 mb-1">
-                                  Order ID
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-mono text-sm text-gray-900 bg-gray-50 px-2 py-1 rounded truncate flex-1">
-                                    {payment.razorpay?.orderId || "N/A"}
-                                  </span>
-                                  {payment.razorpay?.orderId && (
+                              {/* ================= RAZORPAY FLOW ================= */}
+                              {isRazorpay && (
+                                <>
+                                  <div>
+                                    <div className="text-xs text-gray-500 mb-1">
+                                      Order ID
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-mono text-sm text-gray-900 bg-gray-50 px-2 py-1 rounded truncate flex-1">
+                                        {payment.razorpay.orderId}
+                                      </span>
+                                      <button
+                                        onClick={() =>
+                                          copyToClipboard(
+                                            payment.razorpay.orderId,
+                                            "Order ID"
+                                          )
+                                        }
+                                        className="p-1 hover:bg-gray-100 rounded"
+                                      >
+                                        <FiCopy className="w-3.5 h-3.5 text-gray-500" />
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <div className="text-xs text-gray-500 mb-1">
+                                      Payment ID
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-mono text-sm text-gray-900 bg-gray-50 px-2 py-1 rounded truncate flex-1">
+                                        {payment.razorpay.paymentId}
+                                      </span>
+                                      <button
+                                        onClick={() =>
+                                          copyToClipboard(
+                                            payment.razorpay.paymentId,
+                                            "Payment ID"
+                                          )
+                                        }
+                                        className="p-1 hover:bg-gray-100 rounded"
+                                      >
+                                        <FiCopy className="w-3.5 h-3.5 text-gray-500" />
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {payment.status === "SUCCESS" && (
                                     <button
                                       onClick={() =>
-                                        copyToClipboard(
-                                          payment.razorpay.orderId,
-                                          "Order ID"
+                                        window.open(
+                                          `https://dashboard.razorpay.com/app/payments/${payment.razorpay.paymentId}`,
+                                          "_blank"
                                         )
                                       }
-                                      className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                      title="Copy Order ID"
+                                      className="inline-flex items-center gap-2 px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded-lg border border-blue-200"
                                     >
-                                      <FiCopy className="w-3.5 h-3.5 text-gray-500 hover:text-emerald-600" />
+                                      <FiExternalLink className="w-3 h-3" />
+                                      View on Razorpay
                                     </button>
                                   )}
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-xs text-gray-500 mb-1">
-                                  Payment ID
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-mono text-sm text-gray-900 bg-gray-50 px-2 py-1 rounded truncate flex-1">
-                                    {payment.razorpay?.paymentId || "N/A"}
-                                  </span>
-                                  {payment.razorpay?.paymentId && (
-                                    <button
-                                      onClick={() =>
-                                        copyToClipboard(
-                                          payment.razorpay.paymentId,
-                                          "Payment ID"
-                                        )
-                                      }
-                                      className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                      title="Copy Payment ID"
-                                    >
-                                      <FiCopy className="w-3.5 h-3.5 text-gray-500 hover:text-emerald-600" />
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                              {isSuccess && (
-                                <button
-                                  onClick={() =>
-                                    window.open(
-                                      `https://dashboard.razorpay.com/app/payments/${payment.razorpay?.paymentId}`,
-                                      "_blank"
-                                    )
-                                  }
-                                  className="inline-flex items-center gap-2 px-3 py-1.5 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
-                                >
-                                  <FiExternalLink className="w-3 h-3" />
-                                  View on Razorpay
-                                </button>
+                                </>
+                              )}
+
+                              {/* ================= ADMIN PANEL FLOW ================= */}
+                              {isAdminPayment && !isRazorpay && (
+                                <>
+                                  <div>
+                                    <div className="text-xs text-gray-500 mb-1">
+                                      Payment Source
+                                    </div>
+                                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-100 text-purple-700 border border-purple-200 text-sm font-semibold">
+                                      {payment.adminPanelPayment.source}
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <div className="text-xs text-gray-500 mb-1">
+                                      Transaction ID
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-mono text-sm text-gray-900 bg-gray-50 px-2 py-1 rounded flex-1">
+                                        {payment.adminPanelPayment
+                                          .transactionId || "N/A"}
+                                      </span>
+
+                                      {payment.adminPanelPayment
+                                        .transactionId && (
+                                        <button
+                                          onClick={() =>
+                                            copyToClipboard(
+                                              payment.adminPanelPayment
+                                                .transactionId,
+                                              "Transaction ID"
+                                            )
+                                          }
+                                          className="p-1 hover:bg-gray-100 rounded"
+                                        >
+                                          <FiCopy className="w-3.5 h-3.5 text-gray-500" />
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="text-xs italic text-gray-500">
+                                    Recorded via Admin Panel
+                                  </div>
+                                </>
                               )}
                             </div>
                           </td>
@@ -563,38 +946,6 @@ export default function ListAllPayments() {
                           </td>
 
                           {/* Date & Time Column */}
-                          {/* <td className="px-6 py-4">
-                            <div className="space-y-4">
-                              <div>
-                                <div className="text-xs text-gray-500 mb-1">
-                                  Payment Date
-                                </div>
-                                <div className="text-sm font-medium text-gray-900">
-                                  {formatDate(payment.paidAt)}
-                                </div>
-                                {payment.paidAt && (
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    {new Date(
-                                      payment.paidAt
-                                    ).toLocaleTimeString("en-IN", {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                      second: "2-digit",
-                                    })}
-                                  </div>
-                                )}
-                              </div>
-                              <div>
-                                <div className="text-xs text-gray-500 mb-1">
-                                  Created Date
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                  {formatDate(payment.createdAt)}
-                                </div>
-                              </div>
-                            </div>
-                          </td> */}
-                          {/* Date & Time Column - Expanded */}
                           <td className="px-6 py-4 min-w-[200px]">
                             <div className="space-y-4">
                               {/* Payment Date Section */}
@@ -638,78 +989,6 @@ export default function ListAllPayments() {
                                   )}
                                 </div>
                               </div>
-
-                              {/* Created Date Section */}
-                              {/* <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl border border-gray-200">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className="p-1.5 bg-gray-100 rounded-md">
-                                    <FiCalendar className="w-3.5 h-3.5 text-gray-600" />
-                                  </div>
-                                  <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                                    Created Date
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <div className="text-sm font-bold text-gray-900">
-                                    {payment.createdAt
-                                      ? new Date(
-                                          payment.createdAt
-                                        ).toLocaleDateString("en-IN", {
-                                          weekday: "short",
-                                          day: "2-digit",
-                                          month: "short",
-                                          year: "numeric",
-                                        })
-                                      : "N/A"}
-                                  </div>
-                                  {payment.createdAt && (
-                                    <div className="text-sm text-gray-700">
-                                      {new Date(
-                                        payment.createdAt
-                                      ).toLocaleTimeString("en-IN", {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        hour12: true,
-                                      })}
-                                    </div>
-                                  )}
-                                </div>
-                              </div> */}
-
-                              {/* Time Difference Section */}
-                              {/* {payment.paidAt && payment.createdAt && (
-                                <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
-                                  <div className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-2">
-                                    Processing Time
-                                  </div>
-                                  <div className="text-sm font-medium text-gray-900">
-                                    {(() => {
-                                      const paidDate = new Date(payment.paidAt);
-                                      const createdDate = new Date(
-                                        payment.createdAt
-                                      );
-                                      const diffMs = paidDate - createdDate;
-                                      const diffSec = Math.floor(diffMs / 1000);
-
-                                      if (diffSec < 60) {
-                                        return `${diffSec} seconds`;
-                                      } else if (diffSec < 3600) {
-                                        return `${Math.floor(
-                                          diffSec / 60
-                                        )} minutes`;
-                                      } else if (diffSec < 86400) {
-                                        return `${Math.floor(
-                                          diffSec / 3600
-                                        )} hours`;
-                                      } else {
-                                        return `${Math.floor(
-                                          diffSec / 86400
-                                        )} days`;
-                                      }
-                                    })()}
-                                  </div>
-                                </div>
-                              )} */}
                             </div>
                           </td>
 
@@ -757,6 +1036,67 @@ Plan: ${payment.membershipPlan?.name || "N/A"}
                                     Copy Receipt
                                   </button>
                                 </div>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Actions Column */}
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col items-center gap-2">
+                              {/* Edit Button (only for admin panel payments) */}
+                              {canEdit && (
+                                <button
+                                  onClick={() => handleEditClick(payment._id)}
+                                  disabled={fetchingPayment}
+                                  className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium rounded-lg hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 border border-emerald-600 hover:border-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title="Edit Payment"
+                                >
+                                  <FiEdit className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+
+                              {/* Disabled Edit Button for Razorpay */}
+                              {isRazorpay && (
+                                <button
+                                  disabled
+                                  className="inline-flex items-center gap-2 px-3 py-2 bg-gray-300 text-gray-500 font-medium rounded-lg border border-gray-400 cursor-not-allowed"
+                                  title="Razorpay payments cannot be edited"
+                                >
+                                  <FiEdit className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+
+                              {/* Copy Receipt Button */}
+                              {isSuccess && (
+                                <button
+                                  onClick={() => {
+                                    const receiptText = `
+Payment Receipt
+================
+${
+  isRazorpay
+    ? `Order ID: ${payment.razorpay.orderId}`
+    : `Payment Source: ${payment.adminPanelPayment?.source}`
+}
+${
+  isRazorpay
+    ? `Payment ID: ${payment.razorpay.paymentId}`
+    : `Transaction ID: ${payment.adminPanelPayment?.transactionId || "N/A"}`
+}
+Amount: ${formatCurrency(payment.amount)}
+Status: ${payment.status}
+Date: ${formatDate(payment.paidAt)}
+Company: ${payment.companyName || payment.user?.companyName || "N/A"}
+Email: ${payment.email || payment.user?.email || "N/A"}
+Plan: ${payment.membershipPlan?.name || "N/A"}
+                                      `.trim();
+                                    copyToClipboard(receiptText, "Receipt");
+                                  }}
+                                  className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 font-medium rounded-lg hover:shadow-sm transition-all duration-200 border border-blue-200 hover:border-blue-300"
+                                  title="Copy Receipt"
+                                >
+                                  <FiCopy className="w-3.5 h-3.5" />
+                                </button>
                               )}
                             </div>
                           </td>
