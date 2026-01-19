@@ -8,6 +8,7 @@ import MembershipTypes from "../pages/membership-details/MembershipTypes";
 import EditMembershipTypes from "../pages/membership-details/EditMembershipTypes";
 import ListAllPayments from "../pages/payments/listAllPayments";
 import AddMemberAdminForm from "../pages/registeredUsers/addMemberForm";
+import PostNotification from "../pages/notifications/postNotification";
 
 const AppRoutes = () => {
   return (
@@ -68,6 +69,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <ListAllPayments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/post-notification"
+          element={
+            <ProtectedRoute>
+              <PostNotification />
             </ProtectedRoute>
           }
         />

@@ -6,6 +6,7 @@ import {
   FiSettings,
   FiGrid,
   FiAward,
+  FiUploadCloud,
 } from "react-icons/fi";
 
 const Sidebar = ({ isOpen }) => {
@@ -29,6 +30,12 @@ const Sidebar = ({ isOpen }) => {
     { to: "/admin/users", icon: FiUsers, label: "Users" },
 
     { to: "/admin/view-payments", icon: FiCreditCard, label: "Payments" },
+
+    {
+      to: "/admin/post-notification",
+      icon: FiUploadCloud,
+      label: "Notification",
+    },
 
     { to: "/admin/settings", icon: FiSettings, label: "Settings" },
   ];
