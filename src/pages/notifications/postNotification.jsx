@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/layout/AdminLayout";
 import api from "../../api/axios";
 import { toast } from "react-toastify";
@@ -7,9 +8,11 @@ export default function PostNotification() {
   /* =========================
      FORM STATE
   ========================= */
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [type, setType] = useState("INFO");
+  const [url, setURL] = useState("");
   const [loading, setLoading] = useState(false);
 
   /* =========================
@@ -209,6 +212,7 @@ export default function PostNotification() {
     const payload = {
       title: title.trim(),
       message: message.trim(),
+      url: url.trim(),
       type,
     };
 
@@ -236,6 +240,7 @@ export default function PostNotification() {
 
         // Reset form
         setTitle("");
+        setURL("");
         setMessage("");
         setType("INFO");
         setSelectedCategories([]);
@@ -283,6 +288,10 @@ export default function PostNotification() {
     return "Unknown category";
   };
 
+  const handleViewNotifications = () => {
+    navigate("/admin/list-notification");
+  };
+
   return (
     <AdminLayout>
       <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow">
@@ -296,6 +305,12 @@ export default function PostNotification() {
             >
               Debug Companies
             </button> */}
+            <button
+              onClick={handleViewNotifications}
+              className="text-sm bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded border"
+            >
+              View Notifications
+            </button>
             <button
               onClick={clearAllSelections}
               className="text-sm bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded border"
@@ -347,6 +362,18 @@ export default function PostNotification() {
             <option value="ALERT">Alert</option>
             <option value="ANNOUNCEMENT">Announcement</option>
           </select>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            URL
+          </label>
+          <input
+            className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="URL"
+            value={url}
+            onChange={(e) => setURL(e.target.value)}
+          />
         </div>
 
         {/* CATEGORY SELECTION */}
