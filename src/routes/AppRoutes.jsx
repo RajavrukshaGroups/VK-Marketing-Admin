@@ -9,6 +9,7 @@ import EditMembershipTypes from "../pages/membership-details/EditMembershipTypes
 import ListAllPayments from "../pages/payments/listAllPayments";
 import AddMemberAdminForm from "../pages/registeredUsers/addMemberForm";
 import PostNotification from "../pages/notifications/postNotification";
+import ListNotification from "../pages/notifications/listNotification";
 
 const AppRoutes = () => {
   return (
@@ -77,6 +78,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <PostNotification />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/list-notification"
+          element={
+            <ProtectedRoute>
+              <ListNotification />
             </ProtectedRoute>
           }
         />
