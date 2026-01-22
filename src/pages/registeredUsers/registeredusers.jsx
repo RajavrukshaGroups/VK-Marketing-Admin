@@ -31,6 +31,7 @@ import {
   FiEdit,
   FiSave,
   FiPlus,
+  FiFile,
 } from "react-icons/fi";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/axios";
@@ -113,7 +114,7 @@ const RegisteredUsers = () => {
   const fetchUsers = async (
     pageNo = 1,
     searchText = "",
-    appliedFilterParams = {}
+    appliedFilterParams = {},
   ) => {
     try {
       setLoading(true);
@@ -166,7 +167,7 @@ const RegisteredUsers = () => {
     } catch (err) {
       console.error("Error fetching user details:", err);
       toast.error(
-        err?.response?.data?.message || "Failed to fetch user details"
+        err?.response?.data?.message || "Failed to fetch user details",
       );
     } finally {
       setLoadingUserDetails(false);
@@ -193,13 +194,26 @@ const RegisteredUsers = () => {
     setShowEditModal(true);
   };
 
+  const handleViewCertificate = (user) => {
+    if (!user?._id) return;
+
+    // window.open(
+    //   `http://localhost:8000/member/auth/user/certificate/${user._id}`,
+    //   "_blank",
+    // );
+    window.open(
+      `${import.meta.env.VITE_API_URL}/member/auth/user/certificate/${user._id}`,
+      "_blank",
+    );
+  };
+
   // Function to handle form submission
   const handleUpdateUser = async (updatedData) => {
     try {
       setIsSubmitting(true);
       const res = await api.patch(
         `/users/edit-user/${editingUser._id}`,
-        updatedData
+        updatedData,
       );
 
       if (res.data.success) {
@@ -215,7 +229,7 @@ const RegisteredUsers = () => {
     } catch (err) {
       console.error("Update error:", err);
       toast.error(
-        err?.response?.data?.message || "Failed to update member details"
+        err?.response?.data?.message || "Failed to update member details",
       );
     } finally {
       setIsSubmitting(false);
@@ -576,7 +590,7 @@ const RegisteredUsers = () => {
                   onClick={() =>
                     copyToClipboard(
                       selectedReferrer.referrer.userId,
-                      "Referrer User ID"
+                      "Referrer User ID",
                     )
                   }
                   disabled={!selectedReferrer.referrer.userId}
@@ -746,14 +760,14 @@ const RegisteredUsers = () => {
               <p className="text-gray-500 text-sm max-w-md text-center mb-6">
                 {search ||
                 Object.values(appliedFilters).some((v) =>
-                  Array.isArray(v) ? v.length > 0 : Boolean(v)
+                  Array.isArray(v) ? v.length > 0 : Boolean(v),
                 )
                   ? "No results match your search/filter criteria."
                   : "There are no registered users in the system yet."}
               </p>
               {search ||
                 (Object.values(appliedFilters).some((v) =>
-                  Array.isArray(v) ? v.length > 0 : Boolean(v)
+                  Array.isArray(v) ? v.length > 0 : Boolean(v),
                 ) && (
                   <button
                     onClick={() => {
@@ -825,7 +839,7 @@ const RegisteredUsers = () => {
                   <tbody className="divide-y divide-gray-100">
                     {users.map((user) => {
                       const statusConfig = getStatusConfig(
-                        user.membership.status
+                        user.membership.status,
                       );
                       const hasReferrer = user.referral?.referredByUser;
                       const isAdminReferral = user.referral?.source === "ADMIN";
@@ -929,7 +943,7 @@ const RegisteredUsers = () => {
                                           onClick={() =>
                                             copyToClipboard(
                                               user.bankDetails.accountNumber,
-                                              "Account Number"
+                                              "Account Number",
                                             )
                                           }
                                           className="p-1 hover:bg-gray-100 rounded transition-colors"
@@ -953,7 +967,7 @@ const RegisteredUsers = () => {
                                           onClick={() =>
                                             copyToClipboard(
                                               user.bankDetails.ifscCode,
-                                              "IFSC Code"
+                                              "IFSC Code",
                                             )
                                           }
                                           className="p-1 hover:bg-gray-100 rounded transition-colors"
@@ -1078,7 +1092,7 @@ const RegisteredUsers = () => {
                                                 >
                                                   {scale}
                                                 </span>
-                                              )
+                                              ),
                                             )}
                                           </div>
                                         )}
@@ -1103,7 +1117,7 @@ const RegisteredUsers = () => {
                                                 >
                                                   {type}
                                                 </span>
-                                              )
+                                              ),
                                             )}
                                           </div>
                                         )}
@@ -1301,6 +1315,14 @@ const RegisteredUsers = () => {
                                 title="Edit Member"
                               >
                                 <FiEdit className="w-3.5 h-3.5" />
+                              </button>
+
+                              <button
+                                onClick={() => handleViewCertificate(user)}
+                                className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium rounded-lg hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 border border-emerald-600 hover:border-emerald-700"
+                                title="View Certificate"
+                              >
+                                <FiFile className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </td>
