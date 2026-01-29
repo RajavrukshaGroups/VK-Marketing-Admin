@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   FiX,
   FiUser,
@@ -17,7 +17,11 @@ import {
   FiClock,
   FiShoppingBag,
   FiPackage,
+  FiDollarSign,
+  FiTrendingUp,
+  FiRefreshCw,
 } from "react-icons/fi";
+import api from "../../api/axios";
 
 const UserDetailsModal = ({
   userDetails,
@@ -26,6 +30,30 @@ const UserDetailsModal = ({
   loading = false,
   getStatusConfig,
 }) => {
+  const [referralData, setReferralData] = useState(null);
+  const [loadingReferral, setLoadingReferral] = useState(false);
+
+  useEffect(() => {
+    if (userDetails?._id) {
+      fetchReferralData();
+    }
+  }, [userDetails?._id]);
+
+  const fetchReferralData = async () => {
+    try {
+      setLoadingReferral(true);
+      const res = await api.get(`/admin/payment/referrals/${userDetails._id}`);
+      if (res.data) {
+        setReferralData(res.data);
+      }
+    } catch (error) {
+      console.error("Error fetching referral data:", error);
+      // Don't show error toast - not all users have referral data
+    } finally {
+      setLoadingReferral(false);
+    }
+  };
+
   if (!userDetails) return null;
   console.log("user details modal", userDetails);
 
@@ -45,6 +73,16 @@ const UserDetailsModal = ({
       month: "long",
       day: "numeric",
     });
+  };
+
+  const formatCurrency = (amount) => {
+    if (!amount) return "₹0";
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
   };
 
   // Function to render business nature section
@@ -115,6 +153,113 @@ const UserDetailsModal = ({
             No business nature specified
           </div>
         )}
+      </div>
+    );
+  };
+
+  // Function to render referral earnings section
+  const renderReferralEarnings = () => {
+    if (!referralData) {
+      return (
+        <div className="text-center py-4 text-gray-400">
+          <FiUsers className="w-8 h-8 mx-auto mb-2 opacity-40" />
+          <p className="text-sm">No referral data available</p>
+          <button
+            onClick={fetchReferralData}
+            className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+          >
+            Try fetching data
+          </button>
+        </div>
+      );
+    }
+
+    const totalAmount = referralData.referredUsers.reduce(
+      (sum, user) => sum + user.amountPaid,
+      0,
+    );
+
+    return (
+      <div className="space-y-4">
+        {/* Stats Summary */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3">
+            <div className="text-xs text-blue-700 mb-1">Total Referrals</div>
+            <div className="text-lg font-bold text-blue-900">
+              {referralData.totalReferrals}
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-3">
+            <div className="text-xs text-green-700 mb-1">Total Generated</div>
+            <div className="text-lg font-bold text-green-900">
+              {formatCurrency(totalAmount)}
+            </div>
+          </div>
+        </div>
+
+        {/* Referred Users List */}
+        <div>
+          <div className="text-xs font-medium text-gray-700 mb-2">
+            Referred Users
+          </div>
+          <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+            {referralData.referredUsers.length > 0 ? (
+              referralData.referredUsers.map((user) => (
+                <div
+                  key={user._id}
+                  className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-shadow"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-gray-900 text-sm truncate">
+                        {user.companyName}
+                      </div>
+                      <div className="text-xs text-gray-500 truncate">
+                        ID: {user.userId}
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-2">
+                      <div className="text-sm font-bold text-green-700">
+                        {formatCurrency(user.amountPaid)}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {new Date(user.joinedAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        user.membershipStatus === "ACTIVE"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {user.membershipStatus}
+                    </span>
+                    <button
+                      onClick={() =>
+                        onCopyToClipboard(user.userId, "User ID")
+                      }
+                      className="p-1 hover:bg-gray-100 rounded"
+                    >
+                      <FiCopy className="w-3 h-3 text-gray-500 hover:text-blue-600" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-4 text-gray-400">
+                <FiUsers className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                <p className="text-sm">No referred users yet</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     );
   };
@@ -220,7 +365,7 @@ const UserDetailsModal = ({
                       onCopy={() =>
                         onCopyToClipboard(
                           userDetails.mobileNumber,
-                          "Mobile Number"
+                          "Mobile Number",
                         )
                       }
                       copyable
@@ -323,7 +468,7 @@ const UserDetailsModal = ({
                       onCopy={() =>
                         onCopyToClipboard(
                           userDetails.bankDetails.accountNumber,
-                          "Account Number"
+                          "Account Number",
                         )
                       }
                       copyable
@@ -335,7 +480,7 @@ const UserDetailsModal = ({
                       onCopy={() =>
                         onCopyToClipboard(
                           userDetails.bankDetails.ifscCode,
-                          "IFSC Code"
+                          "IFSC Code",
                         )
                       }
                       copyable
@@ -372,6 +517,41 @@ const UserDetailsModal = ({
                   )}
                 </div>
               </Section>
+
+              {/* NEW: Referral Earnings Section */}
+              <Section
+                title="Referral Earnings"
+                icon={<FiTrendingUp className="w-5 h-5 text-indigo-600" />}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-sm text-gray-600">
+                    Earnings from referred users
+                  </div>
+                  <button
+                    onClick={fetchReferralData}
+                    disabled={loadingReferral}
+                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Refresh data"
+                  >
+                    <FiRefreshCw
+                      className={`w-4 h-4 text-gray-500 ${
+                        loadingReferral ? "animate-spin" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {loadingReferral ? (
+                  <div className="py-4 text-center">
+                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Loading referral data...
+                    </p>
+                  </div>
+                ) : (
+                  renderReferralEarnings()
+                )}
+              </Section>
             </div>
           )}
         </div>
@@ -398,7 +578,7 @@ Business Nature: ${
                   ? "Manufacturer" +
                     (userDetails.businessNature.manufacturer.scale?.length > 0
                       ? ` (${userDetails.businessNature.manufacturer.scale.join(
-                          ", "
+                          ", ",
                         )})`
                       : "")
                   : ""
@@ -412,7 +592,7 @@ Business Nature: ${
                   ? "Trader" +
                     (userDetails.businessNature.trader.type?.length > 0
                       ? ` (${userDetails.businessNature.trader.type.join(
-                          ", "
+                          ", ",
                         )})`
                       : "")
                   : ""

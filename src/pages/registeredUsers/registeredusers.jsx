@@ -79,38 +79,6 @@ const RegisteredUsers = () => {
     navigate("/admin/add-membership");
   };
 
-  /* =========================
-     FETCH USERS WITH FILTERS
-  ========================= */
-  // const fetchUsers = async (pageNo = 1, searchText = "", filterParams = {}) => {
-  //   try {
-  //     setLoading(true);
-  //     const params = {
-  //       page: pageNo,
-  //       search: searchText,
-  //       ...filterParams,
-  //     };
-
-  //     // Remove empty filter values
-  //     Object.keys(params).forEach(
-  //       (key) => params[key] === "" && delete params[key]
-  //     );
-
-  //     const res = await api.get("/users/fetch-user-details", { params });
-
-  //     if (res.data.success) {
-  //       setUsers(res.data.data);
-  //       setTotalPages(res.data.pagination?.totalPages || 1);
-  //     } else {
-  //       toast.error("Failed to fetch users");
-  //     }
-  //   } catch (err) {
-  //     toast.error(err?.response?.data?.message || "Error fetching users");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const fetchUsers = async (
     pageNo = 1,
     searchText = "",
@@ -320,16 +288,6 @@ const RegisteredUsers = () => {
   const handleApplyFilters = (filterSelections) => {
     setPage(1);
 
-    // const normalizedFilters = {
-    //   businessCategory: filterSelections.businessCategories || [],
-    //   state: filterSelections.states || [],
-    //   district: filterSelections.districts || [],
-    //   taluk: filterSelections.taluks || [],
-    //   membershipPlan: filterSelections.membershipPlans || [],
-    //   manufacturerScale: filterSelections.manufacturerScales || [],
-    //   traderType: filterSelections.traderTypes || [],
-    // };
-
     setAppliedFilters(filterSelections);
   };
 
@@ -479,39 +437,6 @@ const RegisteredUsers = () => {
 
               {/* Modal Body */}
               <div className="px-6 py-5 space-y-6">
-                {/* Current User */}
-                {/* <div className="bg-blue-50 p-4 rounded-xl">
-                  <div className="text-xs text-blue-600 font-semibold mb-2 uppercase tracking-wider">
-                    Current User
-                  </div>
-
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-sm font-bold text-gray-900 truncate">
-                        {selectedReferrer.currentUser.companyName}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        ID:{" "}
-                        <span className="font-mono">
-                          {selectedReferrer.currentUser.userId}
-                        </span>
-                      </div>
-                    </div>
-
-                    <span
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${
-                        selectedReferrer.source === "ADMIN"
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-green-100 text-green-700"
-                      }`}
-                    >
-                      {selectedReferrer.source === "ADMIN"
-                        ? "Admin Referral"
-                        : "User Referral"}
-                    </span>
-                  </div>
-                </div> */}
-
                 {/* Referrer Details */}
                 <div>
                   <div className="text-sm font-semibold text-gray-700 mb-3">
@@ -647,13 +572,6 @@ const RegisteredUsers = () => {
                 </p>
               </div>
             </div>
-
-            {/* <div className="hidden md:block bg-white px-4 py-2.5 rounded-lg border border-gray-200 shadow-sm">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-600">Total Records:</span>
-                <span className="font-bold text-blue-600">{users.length}</span>
-              </div>
-            </div> */}
             <div className="flex items-center gap-4">
               {/* Total Records */}
               <div className="hidden md:block bg-white px-4 py-2.5 rounded-lg border border-gray-200 shadow-sm">
@@ -1018,43 +936,6 @@ const RegisteredUsers = () => {
                           </td>
 
                           {/* Business Column */}
-                          {/* <td className="px-6 py-4">
-                            <div className="space-y-3">
-                              <div>
-                                <div className="text-xs text-gray-500 mb-1.5">
-                                  Category
-                                </div>
-                                <div className="text-sm font-medium text-gray-900 bg-gray-50 px-3 py-1.5 rounded-lg">
-                                  {user.businessCategory?.name || "—"}
-                                </div>
-                              </div>
-                              {user.businessType?.length > 0 && (
-                                <div>
-                                  <div className="text-xs text-gray-500 mb-1.5">
-                                    Business Type
-                                  </div>
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {user.businessType
-                                      .slice(0, 2)
-                                      .map((type, index) => (
-                                        <span
-                                          key={index}
-                                          className="inline-block px-2.5 py-1 bg-gradient-to-r from-gray-100 to-gray-50 text-gray-700 text-xs font-medium rounded-full border border-gray-200"
-                                        >
-                                          {type}
-                                        </span>
-                                      ))}
-                                    {user.businessType.length > 2 && (
-                                      <span className="inline-block px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">
-                                        +{user.businessType.length - 2}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </td> */}
-                          {/* Business Column */}
                           <td className="px-6 py-4">
                             <div className="space-y-3">
                               {/* Business Category */}
@@ -1134,32 +1015,7 @@ const RegisteredUsers = () => {
                                     )}
                                 </div>
                               </div>
-
                               {/* Business Types (keep existing) */}
-                              {/* {user.businessType?.length > 0 && (
-                                <div>
-                                  <div className="text-xs text-gray-500 mb-1.5">
-                                    Business Type
-                                  </div>
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {user.businessType
-                                      .slice(0, 2)
-                                      .map((type, index) => (
-                                        <span
-                                          key={index}
-                                          className="inline-block px-2.5 py-1 bg-gradient-to-r from-gray-100 to-gray-50 text-gray-700 text-xs font-medium rounded-full border border-gray-200"
-                                        >
-                                          {type}
-                                        </span>
-                                      ))}
-                                    {user.businessType.length > 2 && (
-                                      <span className="inline-block px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">
-                                        +{user.businessType.length - 2}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              )} */}
                             </div>
                           </td>
 

@@ -34,6 +34,9 @@ export default function ListAllPayments() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [totalPayments, setTotalPayments] = useState(0);
+  const [totalAmountReceived, setTotalAmountReceived] = useState(0);
+
+  console.log("payments", payments);
 
   // Edit modal states
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -60,18 +63,20 @@ export default function ListAllPayments() {
           search: searchText,
         },
       });
+      console.log("response data", res.data);
 
       if (res.data.success) {
         setPayments(res.data.data);
         setTotalPages(res.data.pagination?.totalPages || 1);
         setTotalPayments(res.data.pagination?.totalPayments || 0);
+        setTotalAmountReceived(res.data.totalAmount);
       } else {
         toast.error("Failed to fetch payment records");
       }
     } catch (err) {
       console.error("Fetch error:", err);
       toast.error(
-        err?.response?.data?.message || "Error fetching payment records"
+        err?.response?.data?.message || "Error fetching payment records",
       );
     } finally {
       setLoading(false);
@@ -148,7 +153,7 @@ export default function ListAllPayments() {
     try {
       setFetchingPayment(true);
       const res = await api.get(
-        `/admin/payment/admin/view-payment/${paymentId}`
+        `/admin/payment/admin/view-payment/${paymentId}`,
       );
       console.log("response edit", res);
 
@@ -183,7 +188,7 @@ export default function ListAllPayments() {
     } catch (err) {
       console.error("Fetch payment error:", err);
       toast.error(
-        err?.response?.data?.message || "Failed to fetch payment details"
+        err?.response?.data?.message || "Failed to fetch payment details",
       );
     } finally {
       setFetchingPayment(false);
@@ -207,7 +212,7 @@ export default function ListAllPayments() {
 
       const res = await api.put(
         `/admin/payment/admin/payment/edit/${editingPayment._id}`,
-        editFormData
+        editFormData,
       );
 
       if (res.data.success) {
@@ -221,7 +226,7 @@ export default function ListAllPayments() {
     } catch (err) {
       console.error("Update error:", err);
       toast.error(
-        err?.response?.data?.message || "Failed to update payment record"
+        err?.response?.data?.message || "Failed to update payment record",
       );
     } finally {
       setEditLoading(false);
@@ -660,16 +665,16 @@ export default function ListAllPayments() {
                                           payment.referral?.source === "ADMIN"
                                             ? "bg-purple-100 text-purple-700"
                                             : payment.referral?.source ===
-                                              "USER"
-                                            ? "bg-green-100 text-green-700"
-                                            : "bg-gray-100 text-gray-700"
+                                                "USER"
+                                              ? "bg-green-100 text-green-700"
+                                              : "bg-gray-100 text-gray-700"
                                         }`}
                                       >
                                         {payment.referral?.source === "ADMIN"
                                           ? "Admin"
                                           : payment.referral?.source === "USER"
-                                          ? "Referred"
-                                          : "Unknown"}
+                                            ? "Referred"
+                                            : "Unknown"}
                                       </div>
                                     </div>
                                   </div>
@@ -734,12 +739,12 @@ export default function ListAllPayments() {
                                       payment.membershipPlan?.name === "GOLD"
                                         ? "bg-gradient-to-r from-amber-100 to-amber-50 text-amber-800 border border-amber-300 shadow-sm"
                                         : payment.membershipPlan?.name ===
-                                          "PREMIUM"
-                                        ? "bg-gradient-to-r from-indigo-100 to-purple-50 text-indigo-800 border border-indigo-300 shadow-sm"
-                                        : payment.membershipPlan?.name ===
-                                          "STANDARD"
-                                        ? "bg-gradient-to-r from-blue-100 to-blue-50 text-blue-800 border border-blue-300 shadow-sm"
-                                        : "bg-gradient-to-r from-gray-100 to-gray-50 text-gray-800 border border-gray-300 shadow-sm"
+                                            "PREMIUM"
+                                          ? "bg-gradient-to-r from-indigo-100 to-purple-50 text-indigo-800 border border-indigo-300 shadow-sm"
+                                          : payment.membershipPlan?.name ===
+                                              "STANDARD"
+                                            ? "bg-gradient-to-r from-blue-100 to-blue-50 text-blue-800 border border-blue-300 shadow-sm"
+                                            : "bg-gradient-to-r from-gray-100 to-gray-50 text-gray-800 border border-gray-300 shadow-sm"
                                     }`}
                                   >
                                     {payment.membershipPlan?.name || "N/A"}
@@ -778,7 +783,7 @@ export default function ListAllPayments() {
                                         onClick={() =>
                                           copyToClipboard(
                                             payment.razorpay.orderId,
-                                            "Order ID"
+                                            "Order ID",
                                           )
                                         }
                                         className="p-1 hover:bg-gray-100 rounded"
@@ -800,7 +805,7 @@ export default function ListAllPayments() {
                                         onClick={() =>
                                           copyToClipboard(
                                             payment.razorpay.paymentId,
-                                            "Payment ID"
+                                            "Payment ID",
                                           )
                                         }
                                         className="p-1 hover:bg-gray-100 rounded"
@@ -815,7 +820,7 @@ export default function ListAllPayments() {
                                       onClick={() =>
                                         window.open(
                                           `https://dashboard.razorpay.com/app/payments/${payment.razorpay.paymentId}`,
-                                          "_blank"
+                                          "_blank",
                                         )
                                       }
                                       className="inline-flex items-center gap-2 px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded-lg border border-blue-200"
@@ -856,7 +861,7 @@ export default function ListAllPayments() {
                                             copyToClipboard(
                                               payment.adminPanelPayment
                                                 .transactionId,
-                                              "Transaction ID"
+                                              "Transaction ID",
                                             )
                                           }
                                           className="p-1 hover:bg-gray-100 rounded"
@@ -888,15 +893,15 @@ export default function ListAllPayments() {
                                     payment.referral?.source === "ADMIN"
                                       ? "bg-purple-100 text-purple-700 border border-purple-200"
                                       : payment.referral?.source === "USER"
-                                      ? "bg-green-100 text-green-700 border border-green-200"
-                                      : "bg-gray-100 text-gray-700 border border-gray-200"
+                                        ? "bg-green-100 text-green-700 border border-green-200"
+                                        : "bg-gray-100 text-gray-700 border border-gray-200"
                                   }`}
                                 >
                                   {payment.referral?.source === "ADMIN"
                                     ? "Admin Referral"
                                     : payment.referral?.source === "USER"
-                                    ? "User Referral"
-                                    : "Unknown"}
+                                      ? "User Referral"
+                                      : "Unknown"}
                                 </div>
                               </div>
 
@@ -921,7 +926,7 @@ export default function ListAllPayments() {
                                             copyToClipboard(
                                               payment.referral
                                                 ?.referredByUserId,
-                                              "Referrer ID"
+                                              "Referrer ID",
                                             )
                                           }
                                           className="p-0.5 hover:bg-blue-200 rounded transition-colors ml-auto"
@@ -962,7 +967,7 @@ export default function ListAllPayments() {
                                   <div className="text-sm font-bold text-gray-900">
                                     {payment.paidAt
                                       ? new Date(
-                                          payment.paidAt
+                                          payment.paidAt,
                                         ).toLocaleDateString("en-IN", {
                                           weekday: "short",
                                           day: "2-digit",
@@ -974,7 +979,7 @@ export default function ListAllPayments() {
                                   {payment.paidAt && (
                                     <div className="text-sm text-gray-700">
                                       {new Date(
-                                        payment.paidAt
+                                        payment.paidAt,
                                       ).toLocaleTimeString("en-IN", {
                                         hour: "2-digit",
                                         minute: "2-digit",
@@ -1189,29 +1194,72 @@ Plan: ${payment.membershipPlan?.name || "N/A"}
         {!loading && payments.length > 0 && (
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="text-sm text-gray-500 mb-1">Total Amount</div>
+              <div className="text-sm text-gray-500 mb-1">
+                Amount Received per Page
+              </div>
               <div className="text-2xl font-bold text-emerald-700">
                 {formatCurrency(
-                  payments.reduce((sum, p) => sum + (p.amount || 0), 0)
+                  payments.reduce((sum, p) => sum + (p.amount || 0), 0),
                 )}
+                {/* {formatCurrency(totalAmountReceived)} */}
               </div>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4">
               <div className="text-sm text-gray-500 mb-1">
-                Successful Payments
+                Successful Payments per Page
               </div>
               <div className="text-2xl font-bold text-emerald-700">
                 {payments.filter((p) => p.status === "SUCCESS").length}
+                {/* {totalPayments} */}
               </div>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="text-sm text-gray-500 mb-1">Average Payment</div>
+              <div className="text-sm text-gray-500 mb-1">
+                Average Payment per Page
+              </div>
               <div className="text-2xl font-bold text-emerald-700">
                 {formatCurrency(
                   payments.length > 0
                     ? payments.reduce((sum, p) => sum + (p.amount || 0), 0) /
                         payments.length
-                    : 0
+                    : 0,
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!loading && payments.length > 0 && (
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="text-sm text-gray-500 mb-1">Total Amount</div>
+              <div className="text-2xl font-bold text-emerald-700">
+                {/* {formatCurrency(
+                  payments.reduce((sum, p) => sum + (p.amount || 0), 0),
+                )} */}
+                {formatCurrency(totalAmountReceived)}
+              </div>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="text-sm text-gray-500 mb-1">
+                Successful Total Payments
+              </div>
+              <div className="text-2xl font-bold text-emerald-700">
+                {/* {payments.filter((p) => p.status === "SUCCESS").length} */}
+                {totalPayments}
+              </div>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="text-sm text-gray-500 mb-1">Average Payment</div>
+              <div className="text-2xl font-bold text-emerald-700">
+                {/* {formatCurrency(
+                  payments.length > 0
+                    ? payments.reduce((sum, p) => sum + (p.amount || 0), 0) /
+                        payments.length
+                    : 0,
+                )} */}
+                {formatCurrency(
+                  totalPayments > 0 ? totalAmountReceived / totalPayments : 0,
                 )}
               </div>
             </div>
