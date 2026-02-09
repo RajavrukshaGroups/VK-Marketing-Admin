@@ -37,7 +37,7 @@ const Sidebar = ({ isOpen }) => {
       label: "Notification",
     },
 
-    { to: "/admin/settings", icon: FiSettings, label: "Settings" },
+    // { to: "/admin/settings", icon: FiSettings, label: "Settings" },
   ];
 
   return (
@@ -49,7 +49,7 @@ const Sidebar = ({ isOpen }) => {
       {/* Logo */}
       <div className="h-14 flex items-center justify-center border-b border-gray-800">
         <span className="text-blue-500 font-bold text-lg transition-all duration-300">
-          {isOpen ? "VK ADMIN" : "VK"}
+          {isOpen ? "AITIF" : "AITIF"}
         </span>
       </div>
 
