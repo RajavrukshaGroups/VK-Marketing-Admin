@@ -34,7 +34,7 @@ export default function ListAllPayments() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [totalPayments, setTotalPayments] = useState(0);
-  const [totalAmountReceived, setTotalAmountReceived] = useState(0);
+  const [totalSuccessAmount, setTotalSuccessAmount] = useState(0); // Renamed for clarity
 
   console.log("payments", payments);
 
@@ -69,7 +69,7 @@ export default function ListAllPayments() {
         setPayments(res.data.data);
         setTotalPages(res.data.pagination?.totalPages || 1);
         setTotalPayments(res.data.pagination?.totalPayments || 0);
-        setTotalAmountReceived(res.data.totalAmount);
+        setTotalSuccessAmount(res.data.totalSuccessAmount || 0); // Updated to use totalSuccessAmount
       } else {
         toast.error("Failed to fetch payment records");
       }
@@ -116,6 +116,7 @@ export default function ListAllPayments() {
           icon: <FiXCircle className="w-4 h-4" />,
         };
       case "PENDING":
+      case "CREATED":
       default:
         return {
           bg: "bg-amber-50",
@@ -263,16 +264,23 @@ export default function ListAllPayments() {
     { value: "CANCELLED", label: "Cancelled" },
   ];
 
+  // Calculate stats for current page (only SUCCESS payments)
+  const currentPageSuccessPayments = payments.filter(
+    (p) => p.status === "SUCCESS",
+  );
+  const currentPageSuccessAmount = currentPageSuccessPayments.reduce(
+    (sum, p) => sum + (p.amount || 0),
+    0,
+  );
+  const currentPageSuccessCount = currentPageSuccessPayments.length;
+  const currentPageAverageSuccess =
+    currentPageSuccessCount > 0
+      ? currentPageSuccessAmount / currentPageSuccessCount
+      : 0;
+
   return (
     <AdminLayout>
       <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
-        {/* <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          className="!z-[9999]"
-          toastClassName="!bg-white !text-gray-800 !border !border-gray-200 !rounded-xl !shadow-lg"
-        /> */}
-
         {/* Edit Payment Modal */}
         {editModalOpen && editingPayment && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -652,8 +660,8 @@ export default function ListAllPayments() {
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="text-sm font-medium text-gray-900 truncate">
-                                      {payment.companyName.toUpperCase() ||
-                                        payment.user?.companyName.toUpperCase() ||
+                                      {payment.companyName?.toUpperCase() ||
+                                        payment.user?.companyName?.toUpperCase() ||
                                         "N/A"}
                                     </div>
                                     <div className="flex items-center gap-2 mt-1">
@@ -1190,77 +1198,91 @@ Plan: ${payment.membershipPlan?.name || "N/A"}
           )}
         </div>
 
-        {/* Stats Summary */}
+        {/* Stats Summary - Current Page (Only SUCCESS payments) */}
         {!loading && payments.length > 0 && (
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="text-sm text-gray-500 mb-1">
-                Amount Received per Page
+              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+                <FiCheckCircle className="w-4 h-4 text-emerald-500" />
+                Amount Received (This Page)
               </div>
               <div className="text-2xl font-bold text-emerald-700">
-                {formatCurrency(
-                  payments.reduce((sum, p) => sum + (p.amount || 0), 0),
-                )}
-                {/* {formatCurrency(totalAmountReceived)} */}
+                {formatCurrency(currentPageSuccessAmount)}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">
+                From {currentPageSuccessCount} successful payment(s)
               </div>
             </div>
+
             <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="text-sm text-gray-500 mb-1">
-                Successful Payments per Page
+              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+                <FiCheckCircle className="w-4 h-4 text-emerald-500" />
+                Successful Payments (This Page)
               </div>
               <div className="text-2xl font-bold text-emerald-700">
-                {payments.filter((p) => p.status === "SUCCESS").length}
-                {/* {totalPayments} */}
+                {currentPageSuccessCount}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">
+                Out of {payments.length} total payments
               </div>
             </div>
+
             <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="text-sm text-gray-500 mb-1">
-                Average Payment per Page
+              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+                <FiDollarSign className="w-4 h-4 text-emerald-500" />
+                Average Payment (This Page)
               </div>
               <div className="text-2xl font-bold text-emerald-700">
-                {formatCurrency(
-                  payments.length > 0
-                    ? payments.reduce((sum, p) => sum + (p.amount || 0), 0) /
-                        payments.length
-                    : 0,
-                )}
+                {formatCurrency(currentPageAverageSuccess)}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">
+                Based on successful payments only
               </div>
             </div>
           </div>
         )}
 
+        {/* Overall Stats - Across All Pages (Only SUCCESS payments) */}
         {!loading && payments.length > 0 && (
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="text-sm text-gray-500 mb-1">Total Amount</div>
+              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+                <FiCheckCircle className="w-4 h-4 text-emerald-500" />
+                Total Amount (All Pages)
+              </div>
               <div className="text-2xl font-bold text-emerald-700">
-                {/* {formatCurrency(
-                  payments.reduce((sum, p) => sum + (p.amount || 0), 0),
-                )} */}
-                {formatCurrency(totalAmountReceived)}
+                {formatCurrency(totalSuccessAmount)}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">
+                From successful payments only
               </div>
             </div>
+
             <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="text-sm text-gray-500 mb-1">
-                Successful Total Payments
+              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+                <FiCheckCircle className="w-4 h-4 text-emerald-500" />
+                Total Payments
               </div>
               <div className="text-2xl font-bold text-emerald-700">
-                {/* {payments.filter((p) => p.status === "SUCCESS").length} */}
                 {totalPayments}
               </div>
+              <div className="text-xs text-gray-400 mt-1">
+                All transactions
+              </div>
             </div>
+
             <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="text-sm text-gray-500 mb-1">Average Payment</div>
+              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+                <FiDollarSign className="w-4 h-4 text-emerald-500" />
+                Average Payment (All Pages)
+              </div>
               <div className="text-2xl font-bold text-emerald-700">
-                {/* {formatCurrency(
-                  payments.length > 0
-                    ? payments.reduce((sum, p) => sum + (p.amount || 0), 0) /
-                        payments.length
-                    : 0,
-                )} */}
                 {formatCurrency(
-                  totalPayments > 0 ? totalAmountReceived / totalPayments : 0,
+                  totalPayments > 0 ? totalSuccessAmount / totalPayments : 0,
                 )}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">
+                Across all successful payments
               </div>
             </div>
           </div>
