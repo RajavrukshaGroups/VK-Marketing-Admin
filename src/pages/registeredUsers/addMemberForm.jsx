@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Select from "react-select";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -8,6 +8,9 @@ import AdminLayout from "../../components/layout/AdminLayout";
 
 const AddMemberAdminForm = () => {
   const navigate = useNavigate();
+  const { paymentId } = useParams();
+
+  console.log("payment id", paymentId);
 
   /* =========================
      ADDRESS STATES
@@ -92,6 +95,115 @@ const AddMemberAdminForm = () => {
     { value: "IMPS", label: "IMPS" },
   ];
 
+  useEffect(() => {
+    if (!paymentId || membershipPlans.length === 0) return;
+
+    const fetchPayment = async () => {
+      try {
+        const res = await api.get(
+          `/admin/payment/admin/view-payment/${paymentId}`,
+        );
+
+        if (!res.data.success) return;
+
+        const data = res.data.data;
+        const snapshot = data.registrationSnapshot;
+
+        if (!snapshot) return;
+
+        /* =========================
+         BASIC DETAILS
+      ========================= */
+        setCompanyName(snapshot.companyName || "");
+        setProprietors(snapshot.proprietors || "");
+        setMobileNumber(snapshot.mobileNumber || "");
+        setEmail(snapshot.email || "");
+        setGstNumber(snapshot.gstNumber || "");
+
+        /* =========================
+         ADDRESS
+      ========================= */
+        setStreet(snapshot.address?.street || "");
+        setPin(snapshot.address?.pin || "");
+        setState(snapshot.address?.state || "");
+        setDistrict(snapshot.address?.district || "");
+        setTaluk(snapshot.address?.taluk || "");
+
+        /* =========================
+         BUSINESS CATEGORY
+      ========================= */
+        setBusinessCategory(snapshot.businessCategory || "");
+
+        /* =========================
+         BUSINESS NATURE
+      ========================= */
+        setBusinessNature({
+          manufacturer: {
+            isManufacturer:
+              snapshot.businessNature?.manufacturer?.isManufacturer || false,
+            scale: snapshot.businessNature?.manufacturer?.scale || [],
+          },
+          trader: {
+            isTrader: snapshot.businessNature?.trader?.isTrader || false,
+            type: snapshot.businessNature?.trader?.type || [],
+          },
+        });
+
+        /* =========================
+         MAJOR COMMODITIES
+      ========================= */
+        if (snapshot.majorCommodities?.length > 0) {
+          setMajorCommodities([
+            snapshot.majorCommodities[0] || "",
+            snapshot.majorCommodities[1] || "",
+          ]);
+        }
+
+        /* =========================
+         BANK DETAILS
+      ========================= */
+        setBankName(snapshot.bankDetails?.bankName || "");
+        setAccountNumber(snapshot.bankDetails?.accountNumber || "");
+        setIfscCode(snapshot.bankDetails?.ifscCode || "");
+
+        /* =========================
+         REFERRAL
+      ========================= */
+        if (snapshot.referral?.referredByUserId) {
+          setReferrerId(snapshot.referral.referredByUserId);
+        }
+
+        /* =========================
+         MEMBERSHIP PLAN
+      ========================= */
+        if (data.membershipPlan?._id) {
+          const matchedPlan = membershipPlans.find(
+            (plan) => plan._id === data.membershipPlan._id,
+          );
+
+          if (matchedPlan) {
+            setSelectedPlan(matchedPlan);
+            setMembershipAmount(Number(matchedPlan.amount));
+            setSelectedPlanBenefits(matchedPlan.benefits || []);
+            setShowPlanBenefits(true);
+          }
+        }
+
+        /* =========================
+         PAYMENT DETAILS
+      ========================= */
+        setPaymentSource(data.adminPanelPayment?.paymentSource || "ADMIN");
+
+        setTransactionId(data.adminPanelPayment?.transactionId || "");
+      } catch (err) {
+        console.error("Prefill error:", err);
+        toast.error("Failed to load payment data");
+      }
+    };
+
+    fetchPayment();
+  }, [paymentId, membershipPlans]);
+
   /* =========================
      FETCH CATEGORIES & MEMBERSHIP PLANS
   ========================= */
@@ -113,7 +225,7 @@ const AddMemberAdminForm = () => {
       try {
         setPlanLoading(true);
         const response = await api.get(
-          "/admin/businessplans/view-membershipplans/regform"
+          "/admin/businessplans/view-membershipplans/regform",
         );
         console.log("response business plans", response);
         if (response.data.success) {
@@ -173,7 +285,7 @@ const AddMemberAdminForm = () => {
     try {
       setPinLoading(true);
       const res = await fetch(
-        `https://api.postalpincode.in/pincode/${pincode}`
+        `https://api.postalpincode.in/pincode/${pincode}`,
       );
       const data = await res.json();
 
@@ -289,7 +401,7 @@ const AddMemberAdminForm = () => {
   }));
 
   const selectedPlanOption = planOptions.find(
-    (opt) => opt.value === selectedPlan?._id
+    (opt) => opt.value === selectedPlan?._id,
   );
 
   /* =========================
@@ -474,6 +586,8 @@ const AddMemberAdminForm = () => {
         paymentSource,
         transactionId: transactionId || undefined,
         amount: membershipAmount,
+
+        paymentId: paymentId || undefined,
       };
 
       console.log("Submitting data:", registrationData);
@@ -505,12 +619,12 @@ const AddMemberAdminForm = () => {
           {/* HEADER */}
           <div className="bg-[#0054A6] text-white p-6 text-center">
             <h1 className="text-3xl md:text-5xl font-black uppercase">
-              Federation of Trade and Industry of India
+              All India Trade and Industries Forum
             </h1>
-            <p className="font-bold text-yellow-300 mt-2">
+            {/* <p className="font-bold text-yellow-300 mt-2">
               (Karnataka Chapter)
-            </p>
-            <p className="text-xl font-bold mt-4">Admin - Add New Member</p>
+            </p> */}
+            {/* <p className="text-xl font-bold mt-4">Admin - Add New Member</p> */}
           </div>
 
           {/* TITLE */}
@@ -699,7 +813,7 @@ const AddMemberAdminForm = () => {
                       <input
                         type="checkbox"
                         checked={businessNature.manufacturer.scale.includes(
-                          "LARGE"
+                          "LARGE",
                         )}
                         onChange={() => toggleManufacturerScale("LARGE")}
                       />{" "}
@@ -710,7 +824,7 @@ const AddMemberAdminForm = () => {
                       <input
                         type="checkbox"
                         checked={businessNature.manufacturer.scale.includes(
-                          "MSME"
+                          "MSME",
                         )}
                         onChange={() => toggleManufacturerScale("MSME")}
                       />{" "}
@@ -744,7 +858,7 @@ const AddMemberAdminForm = () => {
                       <input
                         type="checkbox"
                         checked={businessNature.trader.type.includes(
-                          "WHOLESALE"
+                          "WHOLESALE",
                         )}
                         onChange={() => toggleTraderType("WHOLESALE")}
                       />{" "}
@@ -1034,7 +1148,7 @@ const AddMemberAdminForm = () => {
                     <Select
                       options={paymentSourceOptions}
                       value={paymentSourceOptions.find(
-                        (opt) => opt.value === paymentSource
+                        (opt) => opt.value === paymentSource,
                       )}
                       onChange={(opt) => {
                         setPaymentSource(opt.value);

@@ -66,6 +66,14 @@ const AppRoutes = () => {
           }
         />
         <Route
+          path="/admin/add-membership/:paymentId"
+          element={
+            <ProtectedRoute>
+              <AddMemberAdminForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/view-payments"
           element={
             <ProtectedRoute>
