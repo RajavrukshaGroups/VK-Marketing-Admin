@@ -280,6 +280,62 @@ export default function ListAllPayments() {
       ? currentPageSuccessAmount / currentPageSuccessCount
       : 0;
 
+  /* =========================
+   CANCEL PAYMENT
+========================= */
+  const handleCancelPayment = async (paymentId) => {
+    console.log("payment id", paymentId);
+    const confirmCancel = window.confirm(
+      "Are you sure you want to cancel this payment?",
+    );
+
+    if (!confirmCancel) return;
+
+    try {
+      const res = await api.put(
+        `/admin/payment/delete-payment-records/${paymentId}`,
+      );
+
+      console.log("response soft delete", res);
+
+      if (res.data.success) {
+        toast.success("Payment cancelled successfully");
+        fetchPayments(page, search); // refresh list
+      } else {
+        toast.error(res.data.message || "Failed to cancel payment");
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Error cancelling payment");
+    }
+  };
+
+  /* =========================
+   EXPORT TO GOOGLE SHEET
+========================= */
+  const handleExportToSheet = async () => {
+    const confirmExport = window.confirm(
+      "Are you sure you want to export all payments to Google Sheet?",
+    );
+
+    if (!confirmExport) return;
+
+    try {
+      toast.info("Exporting data to Google Sheet...");
+
+      const res = await api.post("/admin/googlesheet/upload-data-sheet");
+
+      if (res.data.success) {
+        toast.success("Payments exported successfully ✅");
+      } else {
+        toast.error(res.data.message || "Export failed");
+      }
+    } catch (err) {
+      console.error("Export error:", err);
+      toast.error(
+        err?.response?.data?.message || "Error exporting to Google Sheet",
+      );
+    }
+  };
   return (
     <AdminLayout>
       <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
@@ -504,6 +560,12 @@ export default function ListAllPayments() {
                   {totalPayments}
                 </span>
               </div>
+              {/* <button
+                onClick={handleExportToSheet}
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-200"
+              >
+                Export to Google Sheet
+              </button> */}
             </div>
           </div>
 
@@ -1204,6 +1266,20 @@ Plan: ${payment.membershipPlan?.name || "N/A"}
                                   <FiEdit className="w-3.5 h-3.5" />
                                 </button>
                               )}
+
+                              {/* Cancel Payment Button (Only if not SUCCESS & not CANCELLED) */}
+                              {payment.status !== "SUCCESS" &&
+                                payment.status !== "CANCELLED" && (
+                                  <button
+                                    onClick={() =>
+                                      handleCancelPayment(payment._id)
+                                    }
+                                    className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-rose-500 to-rose-600 text-white font-medium rounded-lg hover:shadow-lg hover:from-rose-600 hover:to-rose-700 transition-all duration-200 border border-rose-600 hover:border-rose-700"
+                                    title="Cancel Payment"
+                                  >
+                                    <FiXCircle className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
 
                               {/* Copy Receipt Button */}
                               {isSuccess && (
