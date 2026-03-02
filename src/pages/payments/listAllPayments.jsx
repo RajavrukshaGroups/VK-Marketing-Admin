@@ -560,12 +560,12 @@ export default function ListAllPayments() {
                   {totalPayments}
                 </span>
               </div>
-              {/* <button
+              <button
                 onClick={handleExportToSheet}
                 className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-200"
               >
                 Export to Google Sheet
-              </button> */}
+              </button>
             </div>
           </div>
 
