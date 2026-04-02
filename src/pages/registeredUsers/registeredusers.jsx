@@ -1005,13 +1005,35 @@ const RegisteredUsers = () => {
                                     </div>
                                   )}
 
+                                  {/* Professional Section */}
+                                  {user.businessNature?.professional
+                                    ?.isProfessional && (
+                                    <div className="flex items-center gap-2">
+                                      <div className="px-2 py-1 bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 text-xs font-medium rounded-md border border-purple-200">
+                                        Professional
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Other Section */}
+                                  {user.businessNature?.other?.isOther && (
+                                    <div className="flex items-center gap-2">
+                                      <div className="px-2 py-1 bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 text-xs font-medium rounded-md border border-gray-200">
+                                        Others
+                                      </div>
+                                    </div>
+                                  )}
+
                                   {/* Display if neither manufacturer nor trader */}
                                   {!user.businessNature?.manufacturer
                                     ?.isManufacturer &&
-                                    !user.businessNature?.trader?.isTrader && (
+                                    !user.businessNature?.trader?.isTrader &&
+                                    !user.businessNature?.professional
+                                      ?.isProfessional &&
+                                    !user.businessNature?.other?.isOther(
                                       <div className="text-xs text-gray-400 italic">
                                         No business nature specified
-                                      </div>
+                                      </div>,
                                     )}
                                 </div>
                               </div>

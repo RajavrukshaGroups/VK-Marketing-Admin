@@ -21,6 +21,7 @@ const UserFilters = ({ appliedFilters, onApplyFilters, onClearFilters }) => {
     membershipPlans: [],
     manufacturerScales: [],
     traderTypes: [],
+    businessNatureTypes: [], // ✅ ADD THIS
   });
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -34,10 +35,11 @@ const UserFilters = ({ appliedFilters, onApplyFilters, onClearFilters }) => {
     membershipPlans: [],
     manufacturerScales: [],
     traderTypes: [],
+    businessNatureTypes: [], // ✅ ADD THIS
   });
-
   const [searchQueries, setSearchQueries] = useState({
     businessCategory: "",
+    businessNatureType: "",
     state: "",
     district: "",
     taluk: "",
@@ -94,6 +96,7 @@ const UserFilters = ({ appliedFilters, onApplyFilters, onClearFilters }) => {
     if (appliedFilters) {
       const mapped = {
         businessCategories: appliedFilters.businessCategory || [],
+        businessNatureTypes: appliedFilters.businessNature || [],
         states: appliedFilters.state || [],
         districts: appliedFilters.district || [],
         taluks: appliedFilters.taluk || [],
@@ -131,6 +134,7 @@ const UserFilters = ({ appliedFilters, onApplyFilters, onClearFilters }) => {
     // Map frontend filter names to backend expected names
     const filterMapping = {
       businessCategories: "businessCategory",
+      businessNatureTypes: "businessNature",
       states: "state",
       districts: "district",
       taluks: "taluk",
@@ -153,6 +157,7 @@ const UserFilters = ({ appliedFilters, onApplyFilters, onClearFilters }) => {
   const handleClearFilters = () => {
     const cleared = {
       businessCategories: [],
+      businessNatureTypes: [],
       states: [],
       districts: [],
       taluks: [],
@@ -178,6 +183,7 @@ const UserFilters = ({ appliedFilters, onApplyFilters, onClearFilters }) => {
   const applyToParent = (filters) => {
     const mapping = {
       businessCategories: "businessCategory",
+      businessNatureTypes: "businessNature",
       states: "state",
       districts: "district",
       taluks: "taluk",
@@ -225,7 +231,7 @@ const UserFilters = ({ appliedFilters, onApplyFilters, onClearFilters }) => {
   const getActiveFilterCount = () => {
     return Object.values(tempFilters).reduce(
       (total, arr) => total + arr.length,
-      0
+      0,
     );
   };
 
@@ -235,7 +241,7 @@ const UserFilters = ({ appliedFilters, onApplyFilters, onClearFilters }) => {
     switch (filterType) {
       case "businessCategories":
         const category = filterData.businessCategories.find(
-          (c) => c._id === value
+          (c) => c._id === value,
         );
         return category?.name || value;
       case "membershipPlans":
@@ -249,6 +255,7 @@ const UserFilters = ({ appliedFilters, onApplyFilters, onClearFilters }) => {
   const getFilterDisplayName = (filterType) => {
     const names = {
       businessCategories: "Category",
+      businessNatureTypes: "Business Nature",
       states: "State",
       districts: "District",
       taluks: "Taluk",
@@ -397,14 +404,15 @@ const UserFilters = ({ appliedFilters, onApplyFilters, onClearFilters }) => {
           {/* Filter Sections */}
           <div className="flex-1 overflow-y-auto pr-2">
             {renderCheckboxGroup("businessCategories", "Business Categories")}
+            {renderCheckboxGroup("businessNatureTypes", "Business Nature")}
             {renderCheckboxGroup(
               "manufacturerScales",
-              "Manufacturer Scale"
+              "Manufacturer Scale",
               //   <FiPackage className="w-4 h-4 text-blue-500" />
             )}
             {renderCheckboxGroup(
               "traderTypes",
-              "Trader Type"
+              "Trader Type",
               //   <FiShoppingBag className="w-4 h-4 text-green-500" />
             )}
             {renderCheckboxGroup("states", "States")}

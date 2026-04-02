@@ -86,73 +86,161 @@ const UserDetailsModal = ({
   };
 
   // Function to render business nature section
+  // const renderBusinessNature = () => {
+  //   const { manufacturer, trader, professional, other } =
+  //     userDetails.businessNature || {};
+
+  //   return (
+  //     <div className="space-y-4">
+  //       {/* Manufacturer Section */}
+  //       {manufacturer?.isManufacturer && (
+  //         <div className="space-y-2">
+  //           <div className="flex items-center gap-2">
+  //             <div className="px-3 py-1.5 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 text-sm font-medium rounded-lg border border-blue-200 flex items-center gap-2">
+  //               <FiPackage className="w-4 h-4" />
+  //               Manufacturer
+  //             </div>
+  //           </div>
+
+  //           {manufacturer.scale && manufacturer.scale.length > 0 && (
+  //             <div className="ml-1">
+  //               <div className="text-xs text-gray-500 mb-1">Scale:</div>
+  //               <div className="flex flex-wrap gap-1.5">
+  //                 {manufacturer.scale.map((scale, idx) => (
+  //                   <span
+  //                     key={idx}
+  //                     className="px-2.5 py-1 bg-gradient-to-r from-blue-100 to-blue-50 text-blue-800 text-xs font-medium rounded-full border border-blue-200"
+  //                   >
+  //                     {scale}
+  //                   </span>
+  //                 ))}
+  //               </div>
+  //             </div>
+  //           )}
+  //         </div>
+  //       )}
+
+  //       {/* Trader Section */}
+  //       {trader?.isTrader && (
+  //         <div className="space-y-2">
+  //           <div className="flex items-center gap-2">
+  //             <div className="px-3 py-1.5 bg-gradient-to-r from-green-50 to-green-100 text-green-700 text-sm font-medium rounded-lg border border-green-200 flex items-center gap-2">
+  //               <FiShoppingBag className="w-4 h-4" />
+  //               Trader
+  //             </div>
+  //           </div>
+
+  //           {trader.type && trader.type.length > 0 && (
+  //             <div className="ml-1">
+  //               <div className="text-xs text-gray-500 mb-1">Type:</div>
+  //               <div className="flex flex-wrap gap-1.5">
+  //                 {trader.type.map((type, idx) => (
+  //                   <span
+  //                     key={idx}
+  //                     className="px-2.5 py-1 bg-gradient-to-r from-green-100 to-green-50 text-green-800 text-xs font-medium rounded-full border border-green-200"
+  //                   >
+  //                     {type}
+  //                   </span>
+  //                 ))}
+  //               </div>
+  //             </div>
+  //           )}
+  //         </div>
+  //       )}
+
+  //       {/* Professional Section */}
+  //       {professional?.isProfessional && (
+  //         <div className="space-y-2">
+  //           <div className="flex items-center gap-2">
+  //             <div className="px-3 py-1.5 bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 text-sm font-medium rounded-lg border border-purple-200 flex items-center gap-2">
+  //               <FiBriefcase className="w-4 h-4" />
+  //               Professional
+  //             </div>
+  //           </div>
+  //         </div>
+  //       )}
+
+  //       {/* Other Section */}
+  //       {other?.isOther && (
+  //         <div className="space-y-2">
+  //           <div className="flex items-center gap-2">
+  //             <div className="px-3 py-1.5 bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 text-sm font-medium rounded-lg border border-gray-200 flex items-center gap-2">
+  //               <FiUser className="w-4 h-4" />
+  //               Others
+  //             </div>
+  //           </div>
+  //         </div>
+  //       )}
+
+  //       {/* Display if neither manufacturer nor trader */}
+  //       {!manufacturer?.isManufacturer &&
+  //         !trader?.isTrader &&
+  //         !professional?.isProfessional &&
+  //         !other?.isOther(
+  //           <div className="text-sm text-gray-400 italic">
+  //             No business nature specified
+  //           </div>,
+  //         )}
+  //     </div>
+  //   );
+  // };
   const renderBusinessNature = () => {
-    const { manufacturer, trader } = userDetails.businessNature || {};
+    const { manufacturer, trader, professional, other } =
+      userDetails.businessNature || {};
 
     return (
-      <div className="space-y-4">
-        {/* Manufacturer Section */}
+      <div className="flex flex-wrap gap-2">
+        {/* Manufacturer */}
         {manufacturer?.isManufacturer && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="px-3 py-1.5 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 text-sm font-medium rounded-lg border border-blue-200 flex items-center gap-2">
-                <FiPackage className="w-4 h-4" />
-                Manufacturer
-              </div>
-            </div>
-
-            {manufacturer.scale && manufacturer.scale.length > 0 && (
-              <div className="ml-1">
-                <div className="text-xs text-gray-500 mb-1">Scale:</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {manufacturer.scale.map((scale, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2.5 py-1 bg-gradient-to-r from-blue-100 to-blue-50 text-blue-800 text-xs font-medium rounded-full border border-blue-200"
-                    >
-                      {scale}
-                    </span>
-                  ))}
-                </div>
-              </div>
+          <div className="px-3 py-1.5 bg-blue-100 text-blue-700 text-sm font-medium rounded-lg border border-blue-200 flex items-center gap-2">
+            <FiPackage className="w-4 h-4" />
+            Manufacturer
+            {manufacturer.scale?.length > 0 && (
+              <span className="text-xs font-semibold">
+                ({manufacturer.scale.join(", ")})
+              </span>
             )}
           </div>
         )}
 
-        {/* Trader Section */}
+        {/* Trader */}
         {trader?.isTrader && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="px-3 py-1.5 bg-gradient-to-r from-green-50 to-green-100 text-green-700 text-sm font-medium rounded-lg border border-green-200 flex items-center gap-2">
-                <FiShoppingBag className="w-4 h-4" />
-                Trader
-              </div>
-            </div>
-
-            {trader.type && trader.type.length > 0 && (
-              <div className="ml-1">
-                <div className="text-xs text-gray-500 mb-1">Type:</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {trader.type.map((type, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2.5 py-1 bg-gradient-to-r from-green-100 to-green-50 text-green-800 text-xs font-medium rounded-full border border-green-200"
-                    >
-                      {type}
-                    </span>
-                  ))}
-                </div>
-              </div>
+          <div className="px-3 py-1.5 bg-green-100 text-green-700 text-sm font-medium rounded-lg border border-green-200 flex items-center gap-2">
+            <FiShoppingBag className="w-4 h-4" />
+            Trader
+            {trader.type?.length > 0 && (
+              <span className="text-xs font-semibold">
+                ({trader.type.join(", ")})
+              </span>
             )}
           </div>
         )}
 
-        {/* Display if neither manufacturer nor trader */}
-        {!manufacturer?.isManufacturer && !trader?.isTrader && (
-          <div className="text-sm text-gray-400 italic">
-            No business nature specified
+        {/* Professional */}
+        {professional?.isProfessional && (
+          <div className="px-3 py-1.5 bg-purple-100 text-purple-700 text-sm font-medium rounded-lg border border-purple-200 flex items-center gap-2">
+            <FiBriefcase className="w-4 h-4" />
+            Professional
           </div>
         )}
+
+        {/* Others */}
+        {other?.isOther && (
+          <div className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg border border-gray-200 flex items-center gap-2">
+            <FiUser className="w-4 h-4" />
+            Others
+          </div>
+        )}
+
+        {/* Empty case */}
+        {!manufacturer?.isManufacturer &&
+          !trader?.isTrader &&
+          !professional?.isProfessional &&
+          !other?.isOther && (
+            <div className="text-sm text-gray-400 italic">
+              No business nature specified
+            </div>
+          )}
       </div>
     );
   };
@@ -242,9 +330,7 @@ const UserDetailsModal = ({
                       {user.membershipStatus}
                     </span>
                     <button
-                      onClick={() =>
-                        onCopyToClipboard(user.userId, "User ID")
-                      }
+                      onClick={() => onCopyToClipboard(user.userId, "User ID")}
                       className="p-1 hover:bg-gray-100 rounded"
                     >
                       <FiCopy className="w-3 h-3 text-gray-500 hover:text-blue-600" />
@@ -574,28 +660,28 @@ Business Category: ${
                 userDetails.businessCategory
               }
 Business Nature: ${
-                userDetails.businessNature?.manufacturer?.isManufacturer
-                  ? "Manufacturer" +
-                    (userDetails.businessNature.manufacturer.scale?.length > 0
-                      ? ` (${userDetails.businessNature.manufacturer.scale.join(
-                          ", ",
-                        )})`
-                      : "")
-                  : ""
-              }${
-                userDetails.businessNature?.manufacturer?.isManufacturer &&
-                userDetails.businessNature?.trader?.isTrader
-                  ? ", "
-                  : ""
-              }${
-                userDetails.businessNature?.trader?.isTrader
-                  ? "Trader" +
-                    (userDetails.businessNature.trader.type?.length > 0
-                      ? ` (${userDetails.businessNature.trader.type.join(
-                          ", ",
-                        )})`
-                      : "")
-                  : ""
+                [
+                  userDetails.businessNature?.manufacturer?.isManufacturer &&
+                    `Manufacturer${
+                      userDetails.businessNature.manufacturer.scale?.length
+                        ? ` (${userDetails.businessNature.manufacturer.scale.join(", ")})`
+                        : ""
+                    }`,
+
+                  userDetails.businessNature?.trader?.isTrader &&
+                    `Trader${
+                      userDetails.businessNature.trader.type?.length
+                        ? ` (${userDetails.businessNature.trader.type.join(", ")})`
+                        : ""
+                    }`,
+
+                  userDetails.businessNature?.professional?.isProfessional &&
+                    "Professional",
+
+                  userDetails.businessNature?.other?.isOther && "Others",
+                ]
+                  .filter(Boolean)
+                  .join(", ") || "N/A"
               }
 GST: ${userDetails.gstNumber || "N/A"}
 Bank: ${userDetails.bankDetails?.bankName || "N/A"} - ${

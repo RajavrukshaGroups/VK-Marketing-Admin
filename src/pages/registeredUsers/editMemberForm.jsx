@@ -37,6 +37,12 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
         isTrader: false,
         type: [],
       },
+      professional: {
+        isProfessional: false,
+      },
+      other: {
+        isOther: false,
+      },
     },
     majorCommodities: "",
     gstNumber: "",
@@ -88,6 +94,12 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
             isTrader: false,
             type: [],
           },
+          professional: {
+            isProfessional: false,
+          },
+          other: {
+            isOther: false,
+          },
         },
         majorCommodities: Array.isArray(user.majorCommodities)
           ? user.majorCommodities.join(", ")
@@ -122,7 +134,7 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
     try {
       setLoadingPlans(true);
       const res = await api.get(
-        "/admin/businessplans/view-membershipplans/regform"
+        "/admin/businessplans/view-membershipplans/regform",
       );
       if (res.data.success) {
         setMembershipPlans(res.data?.data);
@@ -228,6 +240,32 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
     }));
   };
 
+  // Professional toggle
+  const handleProfessionalToggle = () => {
+    setFormData((prev) => ({
+      ...prev,
+      businessNature: {
+        ...prev.businessNature,
+        professional: {
+          isProfessional: !prev.businessNature.professional?.isProfessional,
+        },
+      },
+    }));
+  };
+
+  // Other toggle
+  const handleOtherToggle = () => {
+    setFormData((prev) => ({
+      ...prev,
+      businessNature: {
+        ...prev.businessNature,
+        other: {
+          isOther: !prev.businessNature.other?.isOther,
+        },
+      },
+    }));
+  };
+
   // Handle trader type selection
   const handleTraderTypeChange = (type) => {
     setFormData((prev) => {
@@ -286,9 +324,11 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
     // Business nature validation
     if (
       !formData.businessNature.manufacturer.isManufacturer &&
-      !formData.businessNature.trader.isTrader
+      !formData.businessNature.trader.isTrader &&
+      !formData.businessNature.professional?.isProfessional &&
+      !formData.businessNature.other?.isOther
     ) {
-      return "Select at least one business nature (Manufacturer or Trader)";
+      return "Select at least one business nature";
     }
 
     if (
@@ -574,7 +614,7 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
                                 }
                                 className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
                                   formData.businessNature.manufacturer.scale.includes(
-                                    scale
+                                    scale,
                                   )
                                     ? "bg-blue-500 text-white border-blue-600"
                                     : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
@@ -626,7 +666,7 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
                                 onClick={() => handleTraderTypeChange(type)}
                                 className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
                                   formData.businessNature.trader.type.includes(
-                                    type
+                                    type,
                                   )
                                     ? "bg-green-500 text-white border-green-600"
                                     : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
@@ -646,6 +686,42 @@ const EditMemberForm = ({ user, onClose, onSubmit, isSubmitting = false }) => {
                           Select at least one trader type
                         </p>
                       )}
+                  </div>
+
+                  {/* Professional */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleProfessionalToggle}
+                        className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition-colors ${
+                          formData.businessNature.professional?.isProfessional
+                            ? "bg-purple-100 text-purple-700 border-purple-300"
+                            : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                        }`}
+                      >
+                        <FiBriefcase className="w-4 h-4" />
+                        <span>Professional</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Others */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleOtherToggle}
+                        className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition-colors ${
+                          formData.businessNature.other?.isOther
+                            ? "bg-gray-200 text-gray-800 border-gray-400"
+                            : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                        }`}
+                      >
+                        <FiUser className="w-4 h-4" />
+                        <span>Others</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Validation message */}

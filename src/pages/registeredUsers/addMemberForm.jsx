@@ -48,6 +48,12 @@ const AddMemberAdminForm = () => {
       isTrader: false,
       type: [],
     },
+    professional: {
+      isProfessional: false,
+    },
+    other: {
+      isOther: false,
+    },
   });
 
   const [bankName, setBankName] = useState("");
@@ -137,6 +143,18 @@ const AddMemberAdminForm = () => {
         /* =========================
          BUSINESS NATURE
       ========================= */
+        // setBusinessNature({
+        //   manufacturer: {
+        //     isManufacturer:
+        //       snapshot.businessNature?.manufacturer?.isManufacturer || false,
+        //     scale: snapshot.businessNature?.manufacturer?.scale || [],
+        //   },
+        //   trader: {
+        //     isTrader: snapshot.businessNature?.trader?.isTrader || false,
+        //     type: snapshot.businessNature?.trader?.type || [],
+        //   },
+        // });
+
         setBusinessNature({
           manufacturer: {
             isManufacturer:
@@ -146,6 +164,13 @@ const AddMemberAdminForm = () => {
           trader: {
             isTrader: snapshot.businessNature?.trader?.isTrader || false,
             type: snapshot.businessNature?.trader?.type || [],
+          },
+          professional: {
+            isProfessional:
+              snapshot.businessNature?.professional?.isProfessional || false,
+          },
+          other: {
+            isOther: snapshot.businessNature?.other?.isOther || false,
           },
         });
 
@@ -415,9 +440,11 @@ const AddMemberAdminForm = () => {
     ========================= */
     const isManufacturer = businessNature.manufacturer.isManufacturer;
     const isTrader = businessNature.trader.isTrader;
+    const isProfessional = businessNature.professional?.isProfessional;
+    const isOther = businessNature.other?.isOther;
 
-    if (!isManufacturer && !isTrader) {
-      newErrors.businessNature = "Please select Manufacturer and/or Trader";
+    if (!isManufacturer && !isTrader && !isProfessional && !isOther) {
+      newErrors.businessNature = "Please select at least one business type";
     }
 
     if (isManufacturer && businessNature.manufacturer.scale.length === 0) {
@@ -851,7 +878,6 @@ const AddMemberAdminForm = () => {
                   />
                   TRADER
                 </label>
-
                 {businessNature.trader.isTrader && (
                   <div className="ml-6 flex gap-6">
                     <label>
@@ -875,6 +901,41 @@ const AddMemberAdminForm = () => {
                     </label>
                   </div>
                 )}
+
+                {/* Professional */}
+                <label className="flex items-center gap-2 mt-4">
+                  <input
+                    type="checkbox"
+                    checked={businessNature.professional?.isProfessional}
+                    onChange={(e) =>
+                      setBusinessNature((prev) => ({
+                        ...prev,
+                        professional: {
+                          isProfessional: e.target.checked,
+                        },
+                      }))
+                    }
+                  />
+                  PROFESSIONAL
+                </label>
+
+                {/* Other */}
+                <label className="flex items-center gap-2 mt-4">
+                  <input
+                    type="checkbox"
+                    checked={businessNature.other?.isOther}
+                    onChange={(e) =>
+                      setBusinessNature((prev) => ({
+                        ...prev,
+                        other: {
+                          isOther: e.target.checked,
+                        },
+                      }))
+                    }
+                  />
+                  OTHER
+                </label>
+
                 {errors.businessNature && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.businessNature}
