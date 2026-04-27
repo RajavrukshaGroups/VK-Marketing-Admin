@@ -10,6 +10,7 @@ import ListAllPayments from "../pages/payments/listAllPayments";
 import AddMemberAdminForm from "../pages/registeredUsers/addMemberForm";
 import PostNotification from "../pages/notifications/postNotification";
 import ListNotification from "../pages/notifications/listNotification";
+import MayDayLeads from "../pages/mayDayLeads/mayDayLeads";
 
 const AppRoutes = () => {
   return (
@@ -94,6 +95,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <ListNotification />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/may-day"
+          element={
+            <ProtectedRoute>
+              <MayDayLeads />
             </ProtectedRoute>
           }
         />

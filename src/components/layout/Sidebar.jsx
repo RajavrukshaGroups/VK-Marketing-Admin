@@ -37,7 +37,7 @@ const Sidebar = ({ isOpen }) => {
       label: "Notification",
     },
 
-    // { to: "/admin/settings", icon: FiSettings, label: "Settings" },
+    { to: "/admin/may-day", icon: FiSettings, label: "May Day Leads" },
   ];
 
   return (
