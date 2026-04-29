@@ -32,6 +32,7 @@ const MayDayLeads = () => {
           search,
         },
       });
+      console.log("response", res);
       if (res.data?.success) {
         setData(res.data.data || []);
         setTotalPages(res.data.pagination?.totalPages || 1);
@@ -113,7 +114,10 @@ const MayDayLeads = () => {
                 <FiCreditCard className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900" style={{textAlign:"left"}}>
+                <h1
+                  className="text-2xl font-bold text-gray-900"
+                  style={{ textAlign: "left" }}
+                >
                   May Day Leads
                 </h1>
                 <p className="text-sm text-gray-500 mt-1">
@@ -241,6 +245,12 @@ const MayDayLeads = () => {
                         </div>
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <FiCreditCard className="w-4 h-4" />
+                          <span>Unique ID</span>
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">
                         Status
                       </th>
                     </tr>
@@ -310,6 +320,15 @@ const MayDayLeads = () => {
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-600">
                             {formatDate(item.createdAt)}
+                          </td>
+                          <td className="px-6 py-4">
+                            {item.uniqueId ? (
+                              <div className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-bold inline-block tracking-wide">
+                                {item.uniqueId}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-sm">-</span>
+                            )}
                           </td>
                           <td className="px-6 py-4">
                             <div
