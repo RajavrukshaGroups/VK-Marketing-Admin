@@ -301,6 +301,11 @@ const MayDayLeads = () => {
                                     PIN: {item.formData.address.pin}
                                   </div>
                                 )}
+                                {item.formData?.nearbyShop && (
+                                  <div className="mt-2 px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-medium">
+                                    🏪 Nearby Shop: {item.formData.nearbyShop}
+                                  </div>
+                                )}
                               </div>
                             ) : (
                               <span className="text-gray-400 text-sm">-</span>
@@ -309,12 +314,20 @@ const MayDayLeads = () => {
                           <td className="px-6 py-4">
                             <div className="space-y-2">
                               <div className="text-sm font-medium text-gray-900">
-                                {item.selectedPlans
-                                  ?.map((p) => p.name)
-                                  .join(", ")}
+                                {item.isLuckyDraw ? (
+                                  <span className="inline-block px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-semibold text-xs">
+                                    🎁 Lucky Draw
+                                  </span>
+                                ) : (
+                                  item.selectedPlans
+                                    ?.map((p) => p.name)
+                                    .join(", ")
+                                )}
                               </div>
                               <div className="text-lg font-bold text-emerald-700">
-                                {formatCurrency(item.amount)}
+                                {item.isLuckyDraw
+                                  ? "FREE"
+                                  : formatCurrency(item.amount)}
                               </div>
                             </div>
                           </td>
